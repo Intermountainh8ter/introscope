@@ -202,3 +202,22 @@ direction excluding zero in more than 0.10 of replicates, or a degenerate
 responder's interval excluding zero in more than 0.05 of replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T17:20:19Z detect-n-sweep proposal:b40c2498cd22ae5c2af3f47c351effafa4500e662ba52ff884e60b742bbedf61
+
+Hypothesis: with seed 7 and 200 replicates per cell, at n of 25, 50, 100, 200
+and 400 trials per arm, a weak concept detector with true d' of 0.5 has a
+bootstrap interval excluding zero in at least 0.80 of replicates only from n of
+100 upward and in under 0.80 at n of 50 and below, while a matched random
+direction with true d' of 0 excludes zero in at most 0.10 of replicates at
+every n.
+
+Metric: /sweep/min_n_for_power_0_80 (smallest n per arm whose excludes-zero
+rate for the d' 0.5 detector is at least 0.80).
+
+Expected: the smallest n is 100 (range 50 to 200).
+
+Falsifier: the smallest n reaching 0.80 power is below 50 or above 200, or the
+random-direction excludes-zero rate exceeds 0.10 at any n.
+
+This is a simulation with no model queried.

@@ -1,0 +1,17 @@
+{
+  "kind": "detect-n-sweep",
+  "reps": 200,
+  "resamples": 2000,
+  "sweep": {
+    "detector_true_d_prime": 0.5,
+    "min_n_for_power_0_80": 100,
+    "cells": [
+    {"n_per_arm": 25, "detector_mean_d_prime": 0.5738, "detector_excludes_zero_rate": 0.3250, "random_mean_d_prime": -0.0043, "random_excludes_zero_rate": 0.0550},
+    {"n_per_arm": 50, "detector_mean_d_prime": 0.4847, "detector_excludes_zero_rate": 0.4600, "random_mean_d_prime": 0.0142, "random_excludes_zero_rate": 0.0550},
+    {"n_per_arm": 100, "detector_mean_d_prime": 0.5228, "detector_excludes_zero_rate": 0.8600, "random_mean_d_prime": 0.0061, "random_excludes_zero_rate": 0.0500},
+    {"n_per_arm": 200, "detector_mean_d_prime": 0.4946, "detector_excludes_zero_rate": 0.9750, "random_mean_d_prime": 0.0141, "random_excludes_zero_rate": 0.0500},
+    {"n_per_arm": 400, "detector_mean_d_prime": 0.5003, "detector_excludes_zero_rate": 1.0000, "random_mean_d_prime": -0.0058, "random_excludes_zero_rate": 0.0400}
+    ]
+  },
+  "provenance": {"started_at": "2026-11-16T17:20:26Z", "seeds": [7], "command": "target/release/introscope detect-n-sweep --seed 7 --reps 200 --out results/281-detect-n-sweep.json", "hardware": "linux x86_64", "wall_s": 13.215, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

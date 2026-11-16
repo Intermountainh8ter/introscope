@@ -161,3 +161,13 @@ responder excludes zero in 0.06 of replicates against the impact-matched
 direction, above the 0.05 limit the pre-registration set, so the falsifier
 condition on degenerate responders is met for that arm. This is a simulation;
 no model has been queried.
+
+## Detect n-sweep simulation
+
+`results/281-detect-n-sweep.json` simulates the detect measure at 25, 50, 100,
+200 and 400 trials per arm with 200 replicates per cell. A weak detector with
+true d' of 0.5 has an interval that excludes zero in 0.325 of replicates at 25
+trials per arm, 0.46 at 50, 0.86 at 100, 0.975 at 200 and 1.0 at 400. The
+smallest n with a rate of at least 0.80 is 100. A matched random direction with
+true d' of 0 excludes zero in 0.055 of replicates at 25 and 50, 0.05 at 100 and
+200, and 0.04 at 400. This is a simulation; no model has been queried.

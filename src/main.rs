@@ -21,6 +21,11 @@ USAGE:
       d' 1.5) and a matched-random-direction responder (true d' 0) and report
       the sensitivity gap and how often each interval excludes zero.
 
+  introscope detect-n-sweep --out <results.json> [--seed 7] [--reps 200] [--resamples 2000]
+      Simulate the detect measure at 25, 50, 100, 200 and 400 trials per arm
+      for a weak detector (true d' 0.5) and a matched random direction
+      (true d' 0) and report the smallest n with power of at least 0.80.
+
   introscope selfpred-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate the selfpred measure for a self-predictor with privileged access
       (self accuracy 0.75, cross accuracy 0.60) and a degenerate responder
@@ -159,6 +164,36 @@ fn run() -> Result<(), String> {
                 arm(&inj),
                 arm(&rnd),
                 inj.mean_d_prime - rnd.mean_d_prime,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "detect-n-sweep" => {
+            let reps = args.number("--reps", 200)? as usize;
+            let ns = [25usize, 50, 100, 200, 400];
+            let mut rows = Vec::new();
+            let mut min_n: Option<usize> = None;
+            for &n in &ns {
+                let det = simulate_detect_power(0.5, n, reps, resamples, seed);
+                let rnd = simulate_detect_power(0.0, n, reps, resamples, seed.wrapping_add(5000));
+                if min_n.is_none() && det.excludes_zero_rate >= 0.80 {
+                    min_n = Some(n);
+                }
+                rows.push(format!(
+                    "    {{\"n_per_arm\": {}, \"detector_mean_d_prime\": {:.4}, \"detector_excludes_zero_rate\": {:.4}, \"random_mean_d_prime\": {:.4}, \"random_excludes_zero_rate\": {:.4}}}",
+                    n, det.mean_d_prime, det.excludes_zero_rate, rnd.mean_d_prime, rnd.excludes_zero_rate
+                ));
+            }
+            format!(
+                "  \"kind\": \"detect-n-sweep\",\n  \"reps\": {},\n  \"resamples\": {},\n  \"sweep\": {{\n    \"detector_true_d_prime\": 0.5,\n    \"min_n_for_power_0_80\": {},\n    \"cells\": [\n{}\n    ]\n  }},\n{}",
+                reps,
+                resamples,
+                min_n.map_or("null".to_string(), |n| n.to_string()),
+                rows.join(",\n"),
                 provenance(
                     started,
                     seed,
