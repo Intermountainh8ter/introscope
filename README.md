@@ -134,3 +134,15 @@ replicates. A partly wording-following responder has a mean shift of 0.1491 and
 excludes zero in 1.0 of replicates. State-tracking, always-yes and always-no
 responders have a mean shift of 0.0 and exclude zero in 0.0 of replicates. This
 is a simulation; no model has been queried.
+
+## Input-only-baseline simulation
+
+`results/249-input-only-baseline.json` simulates the selfpred measure against an
+input-only baseline at 400 items per arm, 200 replicates, with a label that
+matches the input feature with probability 0.75. An input-driven predictor has
+a mean advantage over the baseline of 0.0 and an interval that includes zero in
+1.0 of replicates. A privileged-state predictor has accuracy 0.8749 against
+0.7510 for the baseline, a mean advantage of 0.1239, and an interval wholly
+above zero in 1.0 of replicates. Always-yes and coin responders have a positive
+interval above zero in 0.0 of replicates. After relabeling, input-only accuracy
+is 0.4960. This is a simulation; no model has been queried.

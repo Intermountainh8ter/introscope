@@ -1,7 +1,8 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
-    simulate_detect_power, simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power,
-    simulate_wording_arm, synth_trials, ConfidenceKind, Responder, SelfCrossSpec, WordingResponder,
+    simulate_detect_power, simulate_input_only_baseline, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_wording_arm, synth_trials,
+    BaselinePredictor, ConfidenceKind, Responder, SelfCrossSpec, WordingResponder,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -33,6 +34,9 @@ USAGE:
       Score detection hit rate minus factual-no yes rate for a graded
       responder and for always-yes, always-no and prompt-sensitive
       responders; count degenerate responders that clear the audit.
+  introscope input-only-baseline --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Score a state-based self-predictor against an input-only baseline and a
+      relabeling control, with degenerate responders.
   introscope wording-arm --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Score the answer shift between paired leading wordings (neutral, could,
       did, presupposing) for always-yes, always-no, state-tracking,
@@ -310,6 +314,61 @@ fn run() -> Result<(), String> {
                 arm(&c),
                 arm(&z),
                 g.mean_auroc,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "input-only-baseline" => {
+            use BaselinePredictor as P;
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs = [
+                ("input_driven", P::InputDriven, false),
+                ("privileged_state", P::PrivilegedState, false),
+                ("always_yes", P::AlwaysYes, false),
+                ("coin", P::Coin, false),
+                ("input_only_after_relabel", P::InputDriven, true),
+            ];
+            let mut arms = Vec::new();
+            let mut adv = Vec::new();
+            for (i, (name, p, relabel)) in specs.iter().enumerate() {
+                let a = simulate_input_only_baseline(
+                    *p,
+                    0.75,
+                    *relabel,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(5000 * i as u64),
+                );
+                arms.push(format!(
+                    "      \"{}\": {{\"predictor_accuracy\": {:.4}, \"input_only_accuracy\": {:.4}, \"mean_advantage\": {:.4}, \"includes_zero_rate\": {:.4}, \"positive_excludes_zero_rate\": {:.4}}}",
+                    name, a.predictor_accuracy, a.baseline_accuracy, a.mean_advantage, a.includes_zero_rate, a.positive_excludes_zero_rate
+                ));
+                adv.push(format!("      \"{}\": {:.4}", name, a.mean_advantage));
+            }
+            let priv_adv = simulate_input_only_baseline(
+                P::PrivilegedState,
+                0.75,
+                false,
+                n,
+                reps,
+                resamples,
+                seed.wrapping_add(5000),
+            )
+            .mean_advantage;
+            format!(
+                "  \"kind\": \"input-only-baseline\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"input_signal\": 0.75,\n  \"input_only_baseline\": {{\n    \"advantage_over_input_only\": {:.4},\n    \"arms\": {{\n{}\n    }},\n    \"advantage_by_arm\": {{\n{}\n    }}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                priv_adv,
+                arms.join(",\n"),
+                adv.join(",\n"),
                 provenance(
                     started,
                     seed,

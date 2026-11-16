@@ -1,0 +1,25 @@
+{
+  "kind": "input-only-baseline",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "input_signal": 0.75,
+  "input_only_baseline": {
+    "advantage_over_input_only": 0.1239,
+    "arms": {
+      "input_driven": {"predictor_accuracy": 0.7500, "input_only_accuracy": 0.7500, "mean_advantage": 0.0000, "includes_zero_rate": 1.0000, "positive_excludes_zero_rate": 0.0000},
+      "privileged_state": {"predictor_accuracy": 0.8749, "input_only_accuracy": 0.7510, "mean_advantage": 0.1239, "includes_zero_rate": 0.0000, "positive_excludes_zero_rate": 1.0000},
+      "always_yes": {"predictor_accuracy": 0.4984, "input_only_accuracy": 0.7489, "mean_advantage": -0.2504, "includes_zero_rate": 0.0000, "positive_excludes_zero_rate": 0.0000},
+      "coin": {"predictor_accuracy": 0.4973, "input_only_accuracy": 0.7486, "mean_advantage": -0.2513, "includes_zero_rate": 0.0000, "positive_excludes_zero_rate": 0.0000},
+      "input_only_after_relabel": {"predictor_accuracy": 0.4960, "input_only_accuracy": 0.4960, "mean_advantage": 0.0000, "includes_zero_rate": 1.0000, "positive_excludes_zero_rate": 0.0000}
+    },
+    "advantage_by_arm": {
+      "input_driven": 0.0000,
+      "privileged_state": 0.1239,
+      "always_yes": -0.2504,
+      "coin": -0.2513,
+      "input_only_after_relabel": 0.0000
+    }
+  },
+  "provenance": {"started_at": "2026-11-16T13:58:46Z", "seeds": [7], "command": "target/release/introscope input-only-baseline --seed 7 --n 400 --reps 200 --out results/249-input-only-baseline.json", "hardware": "linux x86_64", "wall_s": 9.639, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

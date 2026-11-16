@@ -1025,3 +1025,94 @@ pub fn simulate_wording_arm(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+// ------------------------------------------------------- input-only baseline
+
+/// Predictors compared against an input-only baseline.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BaselinePredictor {
+    /// Reads the same input feature as the baseline.
+    InputDriven,
+    /// Reads the hidden state on half the items, the input feature otherwise.
+    PrivilegedState,
+    AlwaysYes,
+    Coin,
+}
+
+/// Mean paired accuracy advantage over the input-only baseline.
+#[derive(Debug, Clone, PartialEq)]
+pub struct InputOnlyArm {
+    pub predictor_accuracy: f64,
+    pub baseline_accuracy: f64,
+    pub mean_advantage: f64,
+    /// Share of replicates whose interval includes zero.
+    pub includes_zero_rate: f64,
+    /// Share of replicates whose interval lies wholly above zero.
+    pub positive_excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` items. The label equals the input feature
+/// with probability `input_signal` (the rest is hidden state). The input-only
+/// baseline predicts the feature. With `relabel`, labels are drawn
+/// independently of the feature.
+pub fn simulate_input_only_baseline(
+    predictor: BaselinePredictor,
+    input_signal: f64,
+    relabel: bool,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> InputOnlyArm {
+    let mut rng = Rng::new(seed);
+    let (mut pa, mut ba, mut adv, mut inc, mut pos) = (0.0, 0.0, 0.0, 0usize, 0usize);
+    for rep in 0..reps {
+        let mut pc = Vec::with_capacity(n);
+        let mut bc = Vec::with_capacity(n);
+        for _ in 0..n {
+            let feature = rng.coin(0.5);
+            let label = if relabel {
+                rng.coin(0.5)
+            } else if rng.coin(input_signal) {
+                feature
+            } else {
+                !feature
+            };
+            let guess = match predictor {
+                BaselinePredictor::InputDriven => feature,
+                BaselinePredictor::PrivilegedState => {
+                    if rng.coin(0.5) {
+                        label
+                    } else {
+                        feature
+                    }
+                }
+                BaselinePredictor::AlwaysYes => true,
+                BaselinePredictor::Coin => rng.coin(0.5),
+            };
+            pc.push(guess == label);
+            bc.push(feature == label);
+        }
+        let all: Vec<usize> = (0..n).collect();
+        let (a, b) = (mean(&pc, &all), mean(&bc, &all));
+        let ci = bootstrap_ci(
+            n,
+            |idx| mean(&pc, idx) - mean(&bc, idx),
+            resamples,
+            seed.wrapping_add(rep as u64 + 1),
+        );
+        pa += a;
+        ba += b;
+        adv += a - b;
+        inc += (ci.0 <= 0.0 && ci.1 >= 0.0) as usize;
+        pos += (ci.0 > 0.0) as usize;
+    }
+    let r = reps as f64;
+    InputOnlyArm {
+        predictor_accuracy: pa / r,
+        baseline_accuracy: ba / r,
+        mean_advantage: adv / r,
+        includes_zero_rate: inc as f64 / r,
+        positive_excludes_zero_rate: pos as f64 / r,
+    }
+}

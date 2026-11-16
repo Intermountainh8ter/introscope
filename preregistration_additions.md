@@ -153,3 +153,28 @@ always-yes or always-no responder interval excluding zero in more than 0.05 of
 replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T13:57:53Z input-only-baseline proposal:811c8269ed50919e6cc39d8b7960a7fe5498d606fd4766207c4897855fb66f6c
+
+Hypothesis: with 400 items per arm, seed 7 and 200 replicates, where labels
+are partly determined by input features, an input-only predictor reaches the
+same accuracy as an input-driven self-predictor, so the advantage of
+self-prediction over the input-only baseline has a bootstrap interval that
+includes zero in at least 0.90 of replicates, while a privileged-state
+predictor has a mean advantage over the input-only baseline of at least 0.10
+with an interval that excludes zero in at least 0.95 of replicates. Always-yes
+and coin responders show no advantage over the input-only baseline, and after
+relabeling (labels decoupled from input features) the input-only predictor
+falls to near chance accuracy.
+
+Metric: /input_only_baseline/advantage_over_input_only.
+
+Expected: mean advantage of the privileged-state predictor over the input-only
+baseline is at least 0.10 (range 0.10 to 1.0).
+
+Falsifier: privileged-state advantage over input-only below 0.10, the
+input-driven self-predictor's advantage interval excluding zero in more than
+0.10 of replicates, or a degenerate responder's interval excluding zero in more
+than 0.05 of replicates.
+
+This is a simulation with no model queried.
