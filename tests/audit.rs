@@ -169,3 +169,20 @@ fn malformed_rows_are_rejected_with_the_line_number() {
     let err = parse_trials("# header\nvibes\tx\ty\t1\t1\n").unwrap_err();
     assert!(err.contains("line 2") && err.contains("vibes"), "{err}");
 }
+
+#[test]
+fn detect_power_separates_injected_from_null_responder() {
+    let inj = introscope::simulate_detect_power(1.5, 200, 20, 200, 7);
+    let null = introscope::simulate_detect_power(0.0, 200, 20, 200, 8);
+    assert!(inj.excludes_zero_rate >= 0.9, "{inj:?}");
+    assert!(null.excludes_zero_rate <= 0.2, "{null:?}");
+    assert!((inj.mean_d_prime - 1.5).abs() < 0.2, "{inj:?}");
+    assert!(null.mean_d_prime.abs() < 0.2, "{null:?}");
+}
+
+#[test]
+fn detect_power_is_deterministic() {
+    let a = introscope::simulate_detect_power(1.0, 50, 5, 100, 3);
+    let b = introscope::simulate_detect_power(1.0, 50, 5, 100, 3);
+    assert_eq!(a, b);
+}

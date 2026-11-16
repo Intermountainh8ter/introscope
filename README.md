@@ -41,11 +41,21 @@ yet. Model runs are added one pre-registered experiment at a time, each as a
 dated section in `preregistration_additions.md` and a new file in
 `results/`.
 
+## Detect-power simulation
+
+`results/225-detect-power.json` simulates the detect measure at 400 signal and
+400 noise trials per arm. An injected-concept responder with true d' of 1.5
+has a mean d' of 1.5004 and an interval that excludes zero in 1.0 of 200
+replicates. A matched-random-direction responder with true d' of 0 has a mean
+d' of -0.0058 and excludes zero in 0.04 of replicates. The sensitivity gap is
+1.5062. This is a simulation; no model has been queried.
+
 ## Use
 
 ```
 cargo test --locked
 cargo run --locked --release -- baselines --seed 7 --n 400 --out results/<name>.json
+cargo run --locked --release -- detect-power --seed 7 --n 400 --reps 200 --out results/<name>.json
 cargo run --locked --release -- score --trials trials.tsv --model <name> --out results/<name>.json
 ```
 

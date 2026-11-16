@@ -1,0 +1,12 @@
+{
+  "kind": "detect-power",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "detection": {
+    "injected": {"true_d_prime": 1.5, "mean_d_prime": 1.5004, "excludes_zero_rate": 1.0000},
+    "random_direction": {"true_d_prime": 0.0, "mean_d_prime": -0.0058, "excludes_zero_rate": 0.0400},
+    "sensitivity_gap": 1.5062
+  },
+  "provenance": {"started_at": "2026-11-16T10:39:58Z", "seeds": [7], "command": "target/release/introscope detect-power --seed 7 --n 400 --reps 200 --out results/225-detect-power.json", "hardware": "linux x86_64", "wall_s": 7.202, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

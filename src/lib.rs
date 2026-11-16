@@ -118,7 +118,7 @@ pub fn probit(p: f64) -> f64 {
         -3.969683028665376e+01,
         2.209460984245205e+02,
         -2.759285104469687e+02,
-        1.383577518672690e+02,
+        1.383_577_518_672_69e2,
         -3.066479806614716e+01,
         2.506628277459239e+00,
     ];
@@ -286,6 +286,72 @@ pub fn score_detect(trials: &[Trial], resamples: usize, seed: u64) -> Option<Det
         d_prime: d_prime(hits, ns, fas, nn),
         d_prime_ci: ci,
     })
+}
+
+/// Result of simulating the detect measure at a known true d'.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PowerArm {
+    pub true_d_prime: f64,
+    pub mean_d_prime: f64,
+    /// Fraction of replicates whose bootstrap interval excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Standard normal CDF (Abramowitz-Stegun 7.1.26 via erf).
+fn norm_cdf(x: f64) -> f64 {
+    let z = x.abs() / std::f64::consts::SQRT_2;
+    let t = 1.0 / (1.0 + 0.327_591_1 * z);
+    let poly = t
+        * (0.254_829_592
+            + t * (-0.284_496_736
+                + t * (1.421_413_741 + t * (-1.453_152_027 + t * 1.061_405_429))));
+    let erf = 1.0 - poly * (-z * z).exp();
+    if x >= 0.0 {
+        0.5 * (1.0 + erf)
+    } else {
+        0.5 * (1.0 - erf)
+    }
+}
+
+/// Simulate `reps` detect tables of `n` signal and `n` noise trials for an
+/// equal-variance responder with the given true d' and an unbiased criterion,
+/// score each with the production scorer, and summarise.
+pub fn simulate_detect_power(
+    true_d_prime: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> PowerArm {
+    let hit_p = norm_cdf(true_d_prime / 2.0);
+    let fa_p = norm_cdf(-true_d_prime / 2.0);
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let mut trials = Vec::with_capacity(2 * n);
+        for i in 0..2 * n {
+            let injected = i < n;
+            let said = rng.coin(if injected { hit_p } else { fa_p });
+            trials.push(Trial {
+                task: "detect".into(),
+                item: format!("s{rep}-{i}"),
+                variant: "free".into(),
+                truth: if injected { "1" } else { "0" }.into(),
+                report: if said { "1" } else { "0" }.into(),
+            });
+        }
+        let d = score_detect(&trials, resamples, seed.wrapping_add(rep as u64 + 1))
+            .expect("both arms present");
+        sum += d.d_prime;
+        if d.d_prime_ci.0 > 0.0 || d.d_prime_ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    PowerArm {
+        true_d_prime,
+        mean_d_prime: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
 }
 
 pub fn score_selfpred(trials: &[Trial], resamples: usize, seed: u64) -> Option<SelfPred> {
