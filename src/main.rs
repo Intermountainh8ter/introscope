@@ -1,8 +1,9 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
-    simulate_detect_power, simulate_input_only_baseline, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_wording_arm, synth_trials,
-    BaselinePredictor, ConfidenceKind, Responder, SelfCrossSpec, WordingResponder,
+    simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_wording_arm,
+    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Responder,
+    SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -34,6 +35,9 @@ USAGE:
       Score detection hit rate minus factual-no yes rate for a graded
       responder and for always-yes, always-no and prompt-sensitive
       responders; count degenerate responders that clear the audit.
+  introscope impact-matched --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Compare a concept detector, an impact-reactive responder and degenerate
+      responders against norm-matched and impact-matched random controls.
   introscope input-only-baseline --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Score a state-based self-predictor against an input-only baseline and a
       relabeling control, with degenerate responders.
@@ -369,6 +373,65 @@ fn run() -> Result<(), String> {
                 priv_adv,
                 arms.join(",\n"),
                 adv.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "impact-matched" => {
+            use ImpactControl as C;
+            use ImpactResponder as R;
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs = [
+                ("concept_detector", R::ConceptDetector),
+                ("impact_reactive", R::ImpactReactive),
+                ("always_yes", R::AlwaysYes),
+                ("coin", R::Coin),
+            ];
+            let mut arms = Vec::new();
+            let mut gaps = Vec::new();
+            for (i, (name, r)) in specs.iter().enumerate() {
+                let nm = simulate_impact_matched(
+                    *r,
+                    C::NormMatched,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(10000 * i as u64),
+                );
+                let im = simulate_impact_matched(
+                    *r,
+                    C::ImpactMatched,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(10000 * i as u64 + 5000),
+                );
+                arms.push(format!(
+                    "      \"{}\": {{\"norm_matched\": {{\"mean_gap\": {:.4}, \"excludes_zero_rate\": {:.4}}}, \"impact_matched\": {{\"mean_gap\": {:.4}, \"excludes_zero_rate\": {:.4}}}}}",
+                    name, nm.mean_gap, nm.excludes_zero_rate, im.mean_gap, im.excludes_zero_rate
+                ));
+                gaps.push((name, im.mean_gap));
+            }
+            let g = |k: &str| {
+                gaps.iter()
+                    .find(|(n, _)| **n == k)
+                    .map(|x| x.1)
+                    .unwrap_or(0.0)
+            };
+            format!(
+                "  \"kind\": \"impact-matched\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"concept_disruption_mean\": {:.1},\n  \"detection_gap\": {{\n    \"concept_minus_impact_matched\": {:.4},\n    \"reactive_minus_impact_matched\": {:.4},\n    \"arms\": {{\n{}\n    }}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                CONCEPT_DISRUPTION,
+                g("concept_detector"),
+                g("impact_reactive"),
+                arms.join(",\n"),
                 provenance(
                     started,
                     seed,

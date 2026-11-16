@@ -178,3 +178,27 @@ input-driven self-predictor's advantage interval excluding zero in more than
 than 0.05 of replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T15:39:23Z impact-matched proposal:651cbbd0f1b01a953b3d981115a5ae0f758cb8c6ff7efc762c1b4ed632a3e4da
+
+Hypothesis: with 400 trials per arm, seed 7 and 200 replicates, an
+impact-reactive responder (yes-probability rises with perturbation disruption,
+no concept information) shows a detection gap against a norm-matched random
+direction whose interval excludes zero in at least 0.90 of replicates, but a
+gap against an impact-matched random direction whose interval includes zero in
+at least 0.90 of replicates. A true concept detector keeps a gap against the
+impact-matched direction with mean at least 0.20 and interval excluding zero in
+at least 0.95 of replicates. Always-yes and coin responders show
+interval-excluding-zero rates of at most 0.05.
+
+Metric: /detection_gap/concept_minus_impact_matched.
+
+Expected: mean detection gap of the true concept detector against the
+impact-matched direction is at least 0.20 (range 0.20 to 1.0).
+
+Falsifier: concept-detector gap against the impact-matched direction below
+0.20, the impact-reactive responder's gap interval against the impact-matched
+direction excluding zero in more than 0.10 of replicates, or a degenerate
+responder's interval excluding zero in more than 0.05 of replicates.
+
+This is a simulation with no model queried.

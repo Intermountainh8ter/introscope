@@ -146,3 +146,18 @@ a mean advantage over the baseline of 0.0 and an interval that includes zero in
 above zero in 1.0 of replicates. Always-yes and coin responders have a positive
 interval above zero in 0.0 of replicates. After relabeling, input-only accuracy
 is 0.4960. This is a simulation; no model has been queried.
+
+## Impact-matched-control simulation
+
+`results/264-impact-matched.json` simulates a detection gap (concept yes rate
+minus control yes rate) at 400 trials per arm, seed 7 and 200 replicates. A
+concept detector has a mean gap of 0.5456 against an impact-matched random
+direction and an interval that excludes zero in 1.0 of replicates. An
+impact-reactive responder with no concept information has a mean gap of 0.2317
+against a norm-matched direction (interval excludes zero in 1.0 of replicates)
+and -0.002 against an impact-matched direction (excludes zero in 0.05 of
+replicates). An always-yes responder excludes zero in 0.0 of replicates. A coin
+responder excludes zero in 0.06 of replicates against the impact-matched
+direction, above the 0.05 limit the pre-registration set, so the falsifier
+condition on degenerate responders is met for that arm. This is a simulation;
+no model has been queried.

@@ -1116,3 +1116,98 @@ pub fn simulate_input_only_baseline(
         positive_excludes_zero_rate: pos as f64 / r,
     }
 }
+
+/// Responder in the impact-matched control simulation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ImpactResponder {
+    /// Says yes with probability 0.7734 on concept trials, 0.2266 on control
+    /// trials, whatever the disruption.
+    ConceptDetector,
+    /// Yes-probability rises with perturbation disruption; no concept
+    /// information.
+    ImpactReactive,
+    AlwaysYes,
+    Coin,
+}
+
+/// Which random direction serves as the control arm.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ImpactControl {
+    /// Same norm as the concept, lower disruption (mean 0).
+    NormMatched,
+    /// Same disruption distribution as the concept (mean 1).
+    ImpactMatched,
+}
+
+/// Summary of one responder against one control.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImpactArm {
+    /// Mean of concept hit rate minus control yes rate.
+    pub mean_gap: f64,
+    /// Fraction of replicates whose bootstrap interval excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Mean disruption of a concept-injection trial.
+pub const CONCEPT_DISRUPTION: f64 = 1.0;
+
+fn impact_yes(r: ImpactResponder, concept: bool, disruption: f64, rng: &mut Rng) -> bool {
+    match r {
+        ImpactResponder::ConceptDetector => rng.coin(if concept { 0.7734 } else { 0.2266 }),
+        ImpactResponder::ImpactReactive => {
+            rng.coin(1.0 / (1.0 + (-(1.2 * disruption - 0.6)).exp()))
+        }
+        ImpactResponder::AlwaysYes => true,
+        ImpactResponder::Coin => rng.coin(0.5),
+    }
+}
+
+/// Simulate `reps` tables of `n` concept and `n` control trials. Each trial
+/// carries a disruption drawn from a unit normal, shifted to the concept mean
+/// for concept and impact-matched trials; score yes rate on concept minus yes
+/// rate on control with a bootstrap interval.
+pub fn simulate_impact_matched(
+    responder: ImpactResponder,
+    control: ImpactControl,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ImpactArm {
+    let mut rng = Rng::new(seed);
+    let ctrl_mean = match control {
+        ImpactControl::NormMatched => 0.0,
+        ImpactControl::ImpactMatched => CONCEPT_DISRUPTION,
+    };
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let con: Vec<bool> = (0..n)
+            .map(|_| {
+                let d = CONCEPT_DISRUPTION + rng.normal();
+                impact_yes(responder, true, d, &mut rng)
+            })
+            .collect();
+        let ctl: Vec<bool> = (0..n)
+            .map(|_| {
+                let d = ctrl_mean + rng.normal();
+                impact_yes(responder, false, d, &mut rng)
+            })
+            .collect();
+        let gap_of = |idx: &[usize]| {
+            let h = idx[..n].iter().filter(|&&i| con[i % n]).count();
+            let f = idx[n..].iter().filter(|&&i| ctl[i % n]).count();
+            (h as f64 - f as f64) / n as f64
+        };
+        let all: Vec<usize> = (0..2 * n).collect();
+        let gap = gap_of(&all);
+        let ci = bootstrap_ci(2 * n, gap_of, resamples, seed.wrapping_add(rep as u64 + 1));
+        sum += gap;
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    ImpactArm {
+        mean_gap: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}

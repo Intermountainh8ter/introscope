@@ -1,0 +1,18 @@
+{
+  "kind": "impact-matched",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "concept_disruption_mean": 1.0,
+  "detection_gap": {
+    "concept_minus_impact_matched": 0.5456,
+    "reactive_minus_impact_matched": -0.0020,
+    "arms": {
+      "concept_detector": {"norm_matched": {"mean_gap": 0.5489, "excludes_zero_rate": 1.0000}, "impact_matched": {"mean_gap": 0.5456, "excludes_zero_rate": 1.0000}},
+      "impact_reactive": {"norm_matched": {"mean_gap": 0.2317, "excludes_zero_rate": 1.0000}, "impact_matched": {"mean_gap": -0.0020, "excludes_zero_rate": 0.0500}},
+      "always_yes": {"norm_matched": {"mean_gap": 0.0000, "excludes_zero_rate": 0.0000}, "impact_matched": {"mean_gap": 0.0000, "excludes_zero_rate": 0.0000}},
+      "coin": {"norm_matched": {"mean_gap": 0.0042, "excludes_zero_rate": 0.0500}, "impact_matched": {"mean_gap": 0.0045, "excludes_zero_rate": 0.0600}}
+    }
+  },
+  "provenance": {"started_at": "2026-11-16T15:39:36Z", "seeds": [7], "command": "target/release/introscope impact-matched --seed 7 --n 400 --reps 200 --out results/264-impact-matched.json", "hardware": "linux x86_64", "wall_s": 27.898, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
