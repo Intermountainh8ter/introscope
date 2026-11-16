@@ -1211,3 +1211,66 @@ pub fn simulate_impact_matched(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+/// Yes-lead added to the yes probability of every arm, one per wording.
+pub const WORDING_LEADS: [f64; 5] = [0.0, 0.1, 0.2, 0.3, 0.4];
+
+/// Summary of one responder under one wording.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WordingCell {
+    /// Yes-lead of the wording.
+    pub lead: f64,
+    /// Mean yes rate pooled over the injected and factual-control arms.
+    pub raw_yes_rate: f64,
+    /// Mean injected yes rate minus factual-control yes rate.
+    pub adjusted_gap: f64,
+    /// Fraction of replicates whose bootstrap interval for the gap excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` injected and `n` factual-control trials for a
+/// responder whose yes probability is `base_inj` / `base_ctl` plus `lead`
+/// (clamped to 1) on each arm. `fixed` forces a constant answer instead.
+#[allow(clippy::too_many_arguments)]
+pub fn simulate_wording_cell(
+    base_inj: f64,
+    base_ctl: f64,
+    fixed: Option<bool>,
+    lead: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> WordingCell {
+    let mut rng = Rng::new(seed);
+    let (p_inj, p_ctl) = match fixed {
+        Some(true) => (1.0, 1.0),
+        Some(false) => (0.0, 0.0),
+        None => ((base_inj + lead).min(1.0), (base_ctl + lead).min(1.0)),
+    };
+    let (mut raw, mut gap_sum, mut excl) = (0.0, 0.0, 0usize);
+    for rep in 0..reps {
+        let inj: Vec<bool> = (0..n).map(|_| rng.coin(p_inj)).collect();
+        let ctl: Vec<bool> = (0..n).map(|_| rng.coin(p_ctl)).collect();
+        let gap_of = |idx: &[usize]| {
+            let h = idx[..n].iter().filter(|&&i| inj[i % n]).count();
+            let f = idx[n..].iter().filter(|&&i| ctl[i % n]).count();
+            (h as f64 - f as f64) / n as f64
+        };
+        let all: Vec<usize> = (0..2 * n).collect();
+        let gap = gap_of(&all);
+        let yes = inj.iter().chain(ctl.iter()).filter(|&&b| b).count();
+        raw += yes as f64 / (2 * n) as f64;
+        let ci = bootstrap_ci(2 * n, gap_of, resamples, seed.wrapping_add(rep as u64 + 1));
+        gap_sum += gap;
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    WordingCell {
+        lead,
+        raw_yes_rate: raw / reps as f64,
+        adjusted_gap: gap_sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}

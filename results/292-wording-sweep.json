@@ -1,0 +1,46 @@
+{
+  "kind": "wording-sweep",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "wording": {
+    "graded_raw_spread_across_wordings": 0.3991,
+    "graded_adjusted_spread_across_wordings": 0.0039,
+    "graded": {"raw_spread": 0.3991, "adjusted_spread": 0.0039, "max_excludes_zero_rate": 1.0000, "cells": [
+        {"lead": 0.0, "raw_yes_rate": 0.3006, "adjusted_gap": 0.5003, "excludes_zero_rate": 1.0000},
+        {"lead": 0.1, "raw_yes_rate": 0.4006, "adjusted_gap": 0.4980, "excludes_zero_rate": 1.0000},
+        {"lead": 0.2, "raw_yes_rate": 0.4988, "adjusted_gap": 0.5001, "excludes_zero_rate": 1.0000},
+        {"lead": 0.3, "raw_yes_rate": 0.5984, "adjusted_gap": 0.5008, "excludes_zero_rate": 1.0000},
+        {"lead": 0.4, "raw_yes_rate": 0.6997, "adjusted_gap": 0.5020, "excludes_zero_rate": 1.0000}
+    ]},
+    "prompt_follower": {"raw_spread": 0.4027, "adjusted_spread": 0.0039, "max_excludes_zero_rate": 0.0550, "cells": [
+        {"lead": 0.0, "raw_yes_rate": 0.2985, "adjusted_gap": 0.0001, "excludes_zero_rate": 0.0500},
+        {"lead": 0.1, "raw_yes_rate": 0.4000, "adjusted_gap": -0.0002, "excludes_zero_rate": 0.0550},
+        {"lead": 0.2, "raw_yes_rate": 0.4989, "adjusted_gap": 0.0018, "excludes_zero_rate": 0.0350},
+        {"lead": 0.3, "raw_yes_rate": 0.6018, "adjusted_gap": 0.0011, "excludes_zero_rate": 0.0400},
+        {"lead": 0.4, "raw_yes_rate": 0.7012, "adjusted_gap": -0.0021, "excludes_zero_rate": 0.0550}
+    ]},
+    "always_yes": {"raw_spread": 0.0000, "adjusted_spread": 0.0000, "max_excludes_zero_rate": 0.0000, "cells": [
+        {"lead": 0.0, "raw_yes_rate": 1.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.1, "raw_yes_rate": 1.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.2, "raw_yes_rate": 1.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.3, "raw_yes_rate": 1.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.4, "raw_yes_rate": 1.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000}
+    ]},
+    "always_no": {"raw_spread": 0.0000, "adjusted_spread": 0.0000, "max_excludes_zero_rate": 0.0000, "cells": [
+        {"lead": 0.0, "raw_yes_rate": 0.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.1, "raw_yes_rate": 0.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.2, "raw_yes_rate": 0.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.3, "raw_yes_rate": 0.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000},
+        {"lead": 0.4, "raw_yes_rate": 0.0000, "adjusted_gap": 0.0000, "excludes_zero_rate": 0.0000}
+    ]},
+    "coin": {"raw_spread": 0.4030, "adjusted_spread": 0.0042, "max_excludes_zero_rate": 0.0550, "cells": [
+        {"lead": 0.0, "raw_yes_rate": 0.4988, "adjusted_gap": 0.0006, "excludes_zero_rate": 0.0550},
+        {"lead": 0.1, "raw_yes_rate": 0.5993, "adjusted_gap": -0.0009, "excludes_zero_rate": 0.0300},
+        {"lead": 0.2, "raw_yes_rate": 0.7004, "adjusted_gap": 0.0015, "excludes_zero_rate": 0.0450},
+        {"lead": 0.3, "raw_yes_rate": 0.8008, "adjusted_gap": 0.0034, "excludes_zero_rate": 0.0400},
+        {"lead": 0.4, "raw_yes_rate": 0.9018, "adjusted_gap": 0.0006, "excludes_zero_rate": 0.0300}
+    ]}
+  },
+  "provenance": {"started_at": "2026-11-16T19:26:21Z", "seeds": [7], "command": "target/release/introscope wording-sweep --seed 7 --n 400 --reps 200 --out results/292-wording-sweep.json", "hardware": "linux x86_64", "wall_s": 80.134, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

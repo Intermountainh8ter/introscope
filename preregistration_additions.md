@@ -221,3 +221,26 @@ Falsifier: the smallest n reaching 0.80 power is below 50 or above 200, or the
 random-direction excludes-zero rate exceeds 0.10 at any n.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T19:26:05Z wording-sweep proposal:9c87478abb7a29d75bb946bf0d837612ca6f3dbf128cb9f365d20acb9be9f5bb
+
+Hypothesis: with seed 7, 400 trials per arm, 200 replicates and five wordings
+adding a yes-lead of 0.0, 0.1, 0.2, 0.3 and 0.4 to the yes probability of every
+arm, the raw yes rate (pooled over the injected and factual-control arms) of a
+graded detector (base yes probability 0.55 injected, 0.05 control) spreads by
+at least 0.30 across wordings, while its yes-rate-minus-factual-control spread
+across wordings is at most 0.05; a prompt-following responder with no state
+information (base 0.30 on both arms) has a control-adjusted gap interval
+including zero in at least 0.90 of replicates at every wording; always-yes and
+always-no show an adjusted gap of 0.0.
+
+Metric: /wording/graded_adjusted_spread_across_wordings.
+
+Expected: adjusted spread at most 0.05 (range 0 to 0.05) while raw spread is at
+least 0.30.
+
+Falsifier: adjusted spread above 0.05, raw spread below 0.30, or a no-state
+responder's adjusted-gap interval excluding zero in more than 0.10 of
+replicates at any wording.
+
+This is a simulation with no model queried.

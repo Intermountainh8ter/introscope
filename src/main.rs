@@ -2,8 +2,8 @@ use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
     simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
     simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_wording_arm,
-    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Responder,
-    SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION,
+    simulate_wording_cell, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
+    ImpactResponder, Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -20,6 +20,10 @@ USAGE:
       Simulate the detect measure for an injected-concept responder (true
       d' 1.5) and a matched-random-direction responder (true d' 0) and report
       the sensitivity gap and how often each interval excludes zero.
+
+  introscope wording-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate five yes-lead wordings (0.0 to 0.4 added to every arm) and report
+      raw yes-rate spread and factual-control-adjusted spread per responder.
 
   introscope detect-n-sweep --out <results.json> [--seed 7] [--reps 200] [--resamples 2000]
       Simulate the detect measure at 25, 50, 100, 200 and 400 trials per arm
@@ -194,6 +198,77 @@ fn run() -> Result<(), String> {
                 resamples,
                 min_n.map_or("null".to_string(), |n| n.to_string()),
                 rows.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "wording-sweep" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs: [(&str, f64, f64, Option<bool>); 5] = [
+                ("graded", 0.55, 0.05, None),
+                ("prompt_follower", 0.30, 0.30, None),
+                ("always_yes", 0.0, 0.0, Some(true)),
+                ("always_no", 0.0, 0.0, Some(false)),
+                ("coin", 0.5, 0.5, None),
+            ];
+            let mut blocks = Vec::new();
+            let mut spreads = Vec::new();
+            for (k, (name, bi, bc, fx)) in specs.iter().enumerate() {
+                let cells: Vec<_> = WORDING_LEADS
+                    .iter()
+                    .enumerate()
+                    .map(|(j, &l)| {
+                        simulate_wording_cell(
+                            *bi,
+                            *bc,
+                            *fx,
+                            l,
+                            n,
+                            reps,
+                            resamples,
+                            seed.wrapping_add(5000 * (k as u64 * 10 + j as u64)),
+                        )
+                    })
+                    .collect();
+                let spread = |f: &dyn Fn(&introscope::WordingCell) -> f64| {
+                    let v: Vec<f64> = cells.iter().map(f).collect();
+                    v.iter().cloned().fold(f64::MIN, f64::max)
+                        - v.iter().cloned().fold(f64::MAX, f64::min)
+                };
+                let raw_s = spread(&|c| c.raw_yes_rate);
+                let adj_s = spread(&|c| c.adjusted_gap);
+                let rows: Vec<String> = cells
+                    .iter()
+                    .map(|c| {
+                        format!(
+                            "        {{\"lead\": {:.1}, \"raw_yes_rate\": {:.4}, \"adjusted_gap\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                            c.lead, c.raw_yes_rate, c.adjusted_gap, c.excludes_zero_rate
+                        )
+                    })
+                    .collect();
+                let max_excl = cells
+                    .iter()
+                    .map(|c| c.excludes_zero_rate)
+                    .fold(0.0, f64::max);
+                blocks.push(format!(
+                    "    \"{}\": {{\"raw_spread\": {:.4}, \"adjusted_spread\": {:.4}, \"max_excludes_zero_rate\": {:.4}, \"cells\": [\n{}\n    ]}}",
+                    name, raw_s, adj_s, max_excl, rows.join(",\n")
+                ));
+                spreads.push((raw_s, adj_s));
+            }
+            format!(
+                "  \"kind\": \"wording-sweep\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"wording\": {{\n    \"graded_raw_spread_across_wordings\": {:.4},\n    \"graded_adjusted_spread_across_wordings\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                spreads[0].0,
+                spreads[0].1,
+                blocks.join(",\n"),
                 provenance(
                     started,
                     seed,

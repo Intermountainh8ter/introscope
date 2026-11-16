@@ -171,3 +171,15 @@ trials per arm, 0.46 at 50, 0.86 at 100, 0.975 at 200 and 1.0 at 400. The
 smallest n with a rate of at least 0.80 is 100. A matched random direction with
 true d' of 0 excludes zero in 0.055 of replicates at 25 and 50, 0.05 at 100 and
 200, and 0.04 at 400. This is a simulation; no model has been queried.
+
+## Wording-sweep simulation
+
+`results/292-wording-sweep.json` simulates five yes-lead wordings (0.0 to 0.4
+added to the yes probability of every arm) at 400 injected and 400 factual-control
+trials per arm, 200 replicates. A graded detector (0.55 yes injected, 0.05
+control before the lead) has a raw yes-rate spread across wordings of 0.3991
+and a control-adjusted spread of 0.0039. A prompt-following responder with 0.30
+yes on both arms has a raw spread of 0.4027, an adjusted spread of 0.0039 and an
+interval that excludes zero in at most 0.0550 of replicates at any wording.
+Always-yes and always-no have an adjusted spread of 0.0. This is a simulation; no
+model has been queried.
