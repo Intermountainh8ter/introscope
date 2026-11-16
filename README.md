@@ -112,3 +112,14 @@ replicates. A prompt-sensitive responder (0.5 yes on both arms) has a mean
 adjusted score of 0.0001 and excludes zero in 0.07 of replicates. The count of
 degenerate responders that clear the audit is 0. This is a simulation; no model
 has been queried.
+
+## Confidence-channel simulation
+
+`results/244-confidence-channel.json` simulates an attached confidence value at
+400 injected and 400 sham trials per arm, for always-yes responders. With
+confidence graded by injection status (d' of 1.0), the mean AUROC is 0.7606 and
+the interval excludes 0.5 in 1.0 of 200 replicates, while the yes/no gap is
+0.0 and excludes zero in 0.0 of replicates. Constant confidence has a mean
+AUROC of 0.5 and excludes 0.5 in 0.0 of replicates; confidence independent of
+status has a mean AUROC of 0.5025 and excludes 0.5 in 0.04 of replicates. This
+is a simulation; no model has been queried.

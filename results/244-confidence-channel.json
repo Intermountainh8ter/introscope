@@ -1,0 +1,13 @@
+{
+  "kind": "confidence-channel",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "confidence_channel": {
+    "yes_biased_graded": {"mean_auroc": 0.7606, "auroc_excludes_half_rate": 1.0000, "mean_yes_no_gap": 0.0000, "gap_excludes_zero_rate": 0.0000},
+    "yes_biased_constant": {"mean_auroc": 0.5000, "auroc_excludes_half_rate": 0.0000, "mean_yes_no_gap": 0.0000, "gap_excludes_zero_rate": 0.0000},
+    "confidence_noise": {"mean_auroc": 0.5025, "auroc_excludes_half_rate": 0.0400, "mean_yes_no_gap": 0.0000, "gap_excludes_zero_rate": 0.0000},
+    "yes_biased_graded_auroc": 0.7606
+  },
+  "provenance": {"started_at": "2026-11-16T12:42:42Z", "seeds": [7], "command": "target/release/introscope confidence-channel --out results/244-confidence-channel.json --seed 7 --n 400 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 47.226, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

@@ -108,3 +108,26 @@ replicates, or the graded responder excludes zero in fewer than 0.95 of
 replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T12:42:30Z confidence-channel proposal:03ffbae76f6061abea572a70b871295bef233106e7c1ad689544e2455500d4b4
+
+Hypothesis: with 400 injected and 400 sham trials per arm, seed 7 and 200
+replicates, an always-yes responder whose attached confidence is graded by true
+injection status (confidence distributions separated by a fixed d' of 1.0) has
+a yes/no sham-adjusted gap whose interval excludes zero in at most 0.10 of
+replicates, while the bootstrap interval of its confidence AUROC excludes 0.5
+in at least 0.95 of replicates and its mean AUROC is at least 0.70. An
+always-yes responder with constant confidence and a responder with confidence
+drawn independently of status both exclude 0.5 in at most 0.10 of replicates.
+
+Metric: /confidence_channel/yes_biased_graded_auroc.
+
+Expected: mean AUROC of the graded-confidence always-yes responder is at least
+0.70 (range 0.70 to 0.85) while its yes/no gap stays at 0.
+
+Falsifier: graded-confidence AUROC mean below 0.70 or excluding 0.5 in fewer
+than 0.95 of replicates, either control excluding 0.5 in more than 0.10 of
+replicates, or the always-yes yes/no gap excluding zero in more than 0.10 of
+replicates.
+
+This is a simulation with no model queried.

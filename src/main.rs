@@ -1,7 +1,7 @@
 use introscope::{
-    iso_utc, json_escape, parse_trials, report_json, score, simulate_detect_power,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, synth_trials,
-    Responder, SelfCrossSpec,
+    iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
+    simulate_detect_power, simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power,
+    synth_trials, ConfidenceKind, Responder, SelfCrossSpec,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -33,6 +33,10 @@ USAGE:
       Score detection hit rate minus factual-no yes rate for a graded
       responder and for always-yes, always-no and prompt-sensitive
       responders; count degenerate responders that clear the audit.
+  introscope confidence-channel --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Score AUROC of attached confidence for injected versus sham trials for
+      always-yes responders with graded, constant and noise confidence,
+      alongside the yes/no sham-adjusted gap.
   introscope sham-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a sham-controlled detect score (hit rate minus sham
       false-alarm rate) for an injected-concept responder (true d' 1.5), a
@@ -260,6 +264,48 @@ fn run() -> Result<(), String> {
                 arm(&rea),
                 arm(&yes),
                 inj.mean_gap,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "confidence-channel" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let g =
+                simulate_confidence_channel(ConfidenceKind::Graded(1.0), n, reps, resamples, seed);
+            let c = simulate_confidence_channel(
+                ConfidenceKind::Constant,
+                n,
+                reps,
+                resamples,
+                seed.wrapping_add(5000),
+            );
+            let z = simulate_confidence_channel(
+                ConfidenceKind::Noise,
+                n,
+                reps,
+                resamples,
+                seed.wrapping_add(10000),
+            );
+            let arm = |a: &introscope::ConfidenceArm| {
+                format!(
+                    "{{\"mean_auroc\": {:.4}, \"auroc_excludes_half_rate\": {:.4}, \"mean_yes_no_gap\": {:.4}, \"gap_excludes_zero_rate\": {:.4}}}",
+                    a.mean_auroc, a.auroc_excludes_half_rate, a.mean_yes_no_gap, a.gap_excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"confidence-channel\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"confidence_channel\": {{\n    \"yes_biased_graded\": {},\n    \"yes_biased_constant\": {},\n    \"confidence_noise\": {},\n    \"yes_biased_graded_auroc\": {:.4}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arm(&g),
+                arm(&c),
+                arm(&z),
+                g.mean_auroc,
                 provenance(
                     started,
                     seed,

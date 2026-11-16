@@ -403,6 +403,110 @@ pub fn simulate_sham_power(
     }
 }
 
+/// Confidence model of an always-yes responder.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ConfidenceKind {
+    /// Confidence is normal with mean `d_prime` on injected trials, 0 on sham.
+    Graded(f64),
+    /// Confidence is the same value on every trial.
+    Constant,
+    /// Confidence is standard normal, independent of trial status.
+    Noise,
+}
+
+/// Result of simulating the confidence channel of an always-yes responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConfidenceArm {
+    /// Mean AUROC of confidence for injected versus sham trials.
+    pub mean_auroc: f64,
+    /// Fraction of replicates whose bootstrap interval excludes 0.5.
+    pub auroc_excludes_half_rate: f64,
+    /// Mean yes/no sham-adjusted gap (always-yes: 0).
+    pub mean_yes_no_gap: f64,
+    /// Fraction of replicates whose yes/no gap interval excludes zero.
+    pub gap_excludes_zero_rate: f64,
+}
+
+/// AUROC of `score` for positives versus negatives, ties counting one half.
+/// `None` when either class is absent.
+pub fn auroc(items: &[(f64, bool)]) -> Option<f64> {
+    let mut v: Vec<(f64, bool)> = items.to_vec();
+    v.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    let pos = v.iter().filter(|x| x.1).count();
+    let neg = v.len() - pos;
+    if pos == 0 || neg == 0 {
+        return None;
+    }
+    let (mut i, mut rank_sum) = (0, 0.0);
+    while i < v.len() {
+        let mut j = i;
+        while j < v.len() && v[j].0 == v[i].0 {
+            j += 1;
+        }
+        let mid = (i + 1 + j) as f64 / 2.0;
+        rank_sum += mid * v[i..j].iter().filter(|x| x.1).count() as f64;
+        i = j;
+    }
+    Some((rank_sum - pos as f64 * (pos as f64 + 1.0) / 2.0) / (pos as f64 * neg as f64))
+}
+
+impl Rng {
+    /// Standard normal by Box-Muller.
+    pub fn normal(&mut self) -> f64 {
+        let u = 1.0 - self.unit();
+        let w = self.unit();
+        (-2.0 * u.ln()).sqrt() * (2.0 * std::f64::consts::PI * w).cos()
+    }
+}
+
+/// Simulate `reps` tables of `n` injected and `n` sham trials where the
+/// responder always says yes and attaches a confidence value drawn per
+/// `kind`; score AUROC of confidence and the yes/no sham-adjusted gap.
+pub fn simulate_confidence_channel(
+    kind: ConfidenceKind,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ConfidenceArm {
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let items: Vec<(f64, bool)> = (0..2 * n)
+            .map(|i| {
+                let injected = i < n;
+                let c = match kind {
+                    ConfidenceKind::Graded(d) => rng.normal() + if injected { d } else { 0.0 },
+                    ConfidenceKind::Constant => 0.7,
+                    ConfidenceKind::Noise => rng.normal(),
+                };
+                (c, injected)
+            })
+            .collect();
+        let a = auroc(&items).expect("both arms present");
+        let ci = bootstrap_ci(
+            2 * n,
+            |idx| {
+                let sample: Vec<(f64, bool)> = idx.iter().map(|&i| items[i]).collect();
+                auroc(&sample).unwrap_or(f64::NAN)
+            },
+            resamples,
+            seed.wrapping_add(rep as u64 + 1),
+        );
+        sum += a;
+        if ci.0 > 0.5 || ci.1 < 0.5 {
+            excl += 1;
+        }
+    }
+    let gap = simulate_sham_power(1.0, 1.0, n, reps, resamples, seed.wrapping_add(7000));
+    ConfidenceArm {
+        mean_auroc: sum / reps as f64,
+        auroc_excludes_half_rate: excl as f64 / reps as f64,
+        mean_yes_no_gap: gap.mean_gap,
+        gap_excludes_zero_rate: gap.excludes_zero_rate,
+    }
+}
+
 /// Result of simulating the selfpred measure at known accuracies.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SelfPredArm {

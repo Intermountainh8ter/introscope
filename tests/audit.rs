@@ -263,3 +263,33 @@ fn yes_bias_control_blocks_constant_and_prompt_sensitive_responders() {
     let sens = introscope::simulate_sham_power(0.5, 0.5, 200, 20, 200, 12);
     assert!(sens.excludes_zero_rate <= 0.3, "{sens:?}");
 }
+
+#[test]
+fn auroc_handles_ties_and_order() {
+    assert_eq!(introscope::auroc(&[(1.0, true), (0.0, false)]), Some(1.0));
+    assert_eq!(introscope::auroc(&[(0.5, true), (0.5, false)]), Some(0.5));
+    assert_eq!(introscope::auroc(&[(0.5, true)]), None);
+}
+
+#[test]
+fn confidence_channel_reads_graded_confidence_under_always_yes() {
+    use introscope::{simulate_confidence_channel as sim, ConfidenceKind as K};
+    let g = sim(K::Graded(1.0), 200, 20, 200, 7);
+    assert!(g.mean_auroc > 0.65, "{g:?}");
+    assert!(g.auroc_excludes_half_rate >= 0.9, "{g:?}");
+    assert_eq!(g.gap_excludes_zero_rate, 0.0, "{g:?}");
+    let c = sim(K::Constant, 200, 20, 200, 8);
+    assert_eq!(c.mean_auroc, 0.5, "{c:?}");
+    assert_eq!(c.auroc_excludes_half_rate, 0.0, "{c:?}");
+    let z = sim(K::Noise, 200, 20, 200, 9);
+    assert!(z.auroc_excludes_half_rate <= 0.3, "{z:?}");
+}
+
+#[test]
+fn confidence_channel_is_deterministic() {
+    use introscope::{simulate_confidence_channel as sim, ConfidenceKind as K};
+    assert_eq!(
+        sim(K::Graded(1.0), 50, 5, 100, 3),
+        sim(K::Graded(1.0), 50, 5, 100, 3)
+    );
+}
