@@ -1,0 +1,10 @@
+[package]
+name = "introscope"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Pre-registered audit of whether a language model's reports about its own internal states carry information about those states, with degenerate-responder baselines."
+
+[dependencies]
+
+[workspace]
