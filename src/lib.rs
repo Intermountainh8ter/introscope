@@ -354,6 +354,55 @@ pub fn simulate_detect_power(
     }
 }
 
+/// Result of simulating a sham-controlled detect score.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShamArm {
+    pub hit_p: f64,
+    pub sham_fa_p: f64,
+    /// Mean of hit rate minus sham false-alarm rate over replicates.
+    pub mean_gap: f64,
+    /// Fraction of replicates whose bootstrap interval excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` injected and `n` sham trials where the
+/// responder says yes with probability `hit_p` on injected trials and
+/// `sham_fa_p` on sham trials; score hit rate minus sham false-alarm rate
+/// with a bootstrap interval and summarise.
+pub fn simulate_sham_power(
+    hit_p: f64,
+    sham_fa_p: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ShamArm {
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let inj: Vec<bool> = (0..n).map(|_| rng.coin(hit_p)).collect();
+        let sham: Vec<bool> = (0..n).map(|_| rng.coin(sham_fa_p)).collect();
+        let gap_of = |idx: &[usize]| {
+            let h = idx[..n].iter().filter(|&&i| inj[i % n]).count();
+            let f = idx[n..].iter().filter(|&&i| sham[i % n]).count();
+            (h as f64 - f as f64) / n as f64
+        };
+        let all: Vec<usize> = (0..2 * n).collect();
+        let gap = gap_of(&all);
+        let ci = bootstrap_ci(2 * n, gap_of, resamples, seed.wrapping_add(rep as u64 + 1));
+        sum += gap;
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    ShamArm {
+        hit_p,
+        sham_fa_p,
+        mean_gap: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}
+
 /// Result of simulating the selfpred measure at known accuracies.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SelfPredArm {

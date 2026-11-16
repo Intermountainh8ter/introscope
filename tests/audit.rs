@@ -203,3 +203,23 @@ fn selfpred_power_is_deterministic() {
     let b = introscope::simulate_selfpred_power(0.7, 0.6, 50, 5, 100, 3);
     assert_eq!(a, b);
 }
+
+#[test]
+fn sham_power_separates_injected_from_sham_reactive_and_always_yes() {
+    let inj = introscope::simulate_sham_power(0.77, 0.23, 200, 20, 200, 7);
+    let rea = introscope::simulate_sham_power(0.5, 0.5, 200, 20, 200, 8);
+    let yes = introscope::simulate_sham_power(1.0, 1.0, 200, 20, 200, 9);
+    assert!(inj.excludes_zero_rate >= 0.9, "{inj:?}");
+    assert!(inj.mean_gap > 0.3, "{inj:?}");
+    assert!(rea.excludes_zero_rate <= 0.3, "{rea:?}");
+    assert!(rea.mean_gap.abs() < 0.05, "{rea:?}");
+    assert_eq!(yes.excludes_zero_rate, 0.0, "{yes:?}");
+    assert_eq!(yes.mean_gap, 0.0, "{yes:?}");
+}
+
+#[test]
+fn sham_power_is_deterministic() {
+    let a = introscope::simulate_sham_power(0.7, 0.3, 50, 5, 100, 3);
+    let b = introscope::simulate_sham_power(0.7, 0.3, 50, 5, 100, 3);
+    assert_eq!(a, b);
+}

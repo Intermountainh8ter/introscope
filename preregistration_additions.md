@@ -41,3 +41,26 @@ degenerate-arm exclusion rate above 0.1.
 
 This is a simulation with no model queried. It fixes the power and the
 false-positive floor of the selfpred measure before the model run.
+
+## 2026-11-16T10:47:51Z sham-power proposal:93eb6972eedd1266418b2894f538c586892c75bf3886475744a6979589fe332e
+
+Hypothesis: with 400 trials per arm and seed 7, an injected-concept responder
+(hit rate from true d' 1.5, sham false-alarm rate from the same d') has a
+sensitivity-minus-sham-false-alarm gap whose bootstrap interval excludes zero
+in at least 0.95 of 200 replicates, while a sham-reactive responder (hit rate
+and false-alarm rate both 0.5, reacting to the prompt and not the injection)
+and an always-yes responder have an interval excluding zero in at most 0.10
+of replicates.
+
+Metric: /sham/sensitivity_minus_false_alarm, the injected-concept responder
+mean gap (hit rate minus sham false-alarm rate).
+
+Expected: the metric is at least 0.30 (range 0.30 to 1.0) and the
+sham-reactive mean gap stays within 0.05 of zero.
+
+Falsifier: the sham-reactive or always-yes responder excludes zero in more
+than 0.10 of replicates, or the injected-concept responder excludes zero in
+fewer than 0.95 of replicates.
+
+This is a simulation with no model queried. It fixes the power and the
+false-positive floor of a sham-controlled detect score before the model run.

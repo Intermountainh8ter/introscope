@@ -1,6 +1,6 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_detect_power,
-    simulate_selfpred_power, synth_trials, Responder,
+    simulate_selfpred_power, simulate_sham_power, synth_trials, Responder,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -23,6 +23,12 @@ USAGE:
       (self accuracy 0.75, cross accuracy 0.60) and a degenerate responder
       with equal accuracy on both (0.60) and report the advantage gap and how
       often each interval excludes zero.
+
+  introscope sham-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a sham-controlled detect score (hit rate minus sham
+      false-alarm rate) for an injected-concept responder (true d' 1.5), a
+      sham-reactive responder (0.5 yes on both arms) and an always-yes
+      responder, and report how often each interval excludes zero.
 
   introscope score --trials <trials.tsv> --out <results.json> [--seed 7] [--resamples 2000]
                    [--model <name>] [--source <url-or-label> --license <licence>]
@@ -148,6 +154,35 @@ fn run() -> Result<(), String> {
                 arm(&inf),
                 arm(&deg),
                 inf.mean_advantage - deg.mean_advantage,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "sham-power" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let inj = simulate_sham_power(0.7734, 0.2266, n, reps, resamples, seed);
+            let rea = simulate_sham_power(0.5, 0.5, n, reps, resamples, seed.wrapping_add(5000));
+            let yes = simulate_sham_power(1.0, 1.0, n, reps, resamples, seed.wrapping_add(10000));
+            let arm = |a: &introscope::ShamArm| {
+                format!(
+                    "{{\"hit_p\": {:.4}, \"sham_fa_p\": {:.4}, \"mean_gap\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    a.hit_p, a.sham_fa_p, a.mean_gap, a.excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"sham-power\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"sham\": {{\n    \"injected\": {},\n    \"sham_reactive\": {},\n    \"always_yes\": {},\n    \"sensitivity_minus_false_alarm\": {:.4}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arm(&inj),
+                arm(&rea),
+                arm(&yes),
+                inj.mean_gap,
                 provenance(
                     started,
                     seed,

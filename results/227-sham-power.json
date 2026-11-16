@@ -1,0 +1,13 @@
+{
+  "kind": "sham-power",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "sham": {
+    "injected": {"hit_p": 0.7734, "sham_fa_p": 0.2266, "mean_gap": 0.5471, "excludes_zero_rate": 1.0000},
+    "sham_reactive": {"hit_p": 0.5000, "sham_fa_p": 0.5000, "mean_gap": -0.0023, "excludes_zero_rate": 0.0400},
+    "always_yes": {"hit_p": 1.0000, "sham_fa_p": 1.0000, "mean_gap": 0.0000, "excludes_zero_rate": 0.0000},
+    "sensitivity_minus_false_alarm": 0.5471
+  },
+  "provenance": {"started_at": "2026-11-16T10:47:54Z", "seeds": [7], "command": "target/release/introscope sham-power --seed 7 --n 400 --reps 200 --out results/227-sham-power.json", "hardware": "linux x86_64", "wall_s": 9.742, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

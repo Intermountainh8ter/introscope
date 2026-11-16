@@ -59,6 +59,18 @@ zero in 0.99 of 200 replicates. A degenerate responder with accuracy 0.60 on
 both has a mean advantage of -0.0014 and excludes zero in 0.05 of replicates.
 The advantage gap is 0.1521. This is a simulation; no model has been queried.
 
+## Sham-power simulation
+
+`results/227-sham-power.json` simulates a sham-controlled detect score (hit
+rate minus sham false-alarm rate) at 400 injected and 400 sham trials per arm.
+An injected-concept responder with hit probability 0.7734 and sham
+false-alarm probability 0.2266 has a mean gap of 0.5471 and an interval that
+excludes zero in 1.0 of 200 replicates. A sham-reactive responder that says
+yes with probability 0.5 on both arms has a mean gap of -0.0023 and excludes
+zero in 0.04 of replicates. An always-yes responder has a mean gap of 0.0 and
+excludes zero in 0.0 of replicates. This is a simulation; no model has been
+queried.
+
 ## Use
 
 ```
@@ -66,6 +78,7 @@ cargo test --locked
 cargo run --locked --release -- baselines --seed 7 --n 400 --out results/<name>.json
 cargo run --locked --release -- detect-power --seed 7 --n 400 --reps 200 --out results/<name>.json
 cargo run --locked --release -- selfpred-power --seed 7 --n 400 --reps 200 --out results/<name>.json
+cargo run --locked --release -- sham-power --seed 7 --n 400 --reps 200 --out results/<name>.json
 cargo run --locked --release -- score --trials trials.tsv --model <name> --out results/<name>.json
 ```
 
