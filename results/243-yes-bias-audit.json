@@ -1,0 +1,14 @@
+{
+  "kind": "yes-bias-audit",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "audit": {
+    "graded": {"hit_rate": 0.7734, "factual_no_yes_p": 0.0500, "mean_adjusted": 0.7221, "excludes_zero_rate": 1.0000},
+    "always_yes": {"hit_rate": 1.0000, "factual_no_yes_p": 1.0000, "mean_adjusted": 0.0000, "excludes_zero_rate": 0.0000},
+    "always_no": {"hit_rate": 0.0000, "factual_no_yes_p": 0.0000, "mean_adjusted": 0.0000, "excludes_zero_rate": 0.0000},
+    "prompt_sensitive": {"hit_rate": 0.5000, "factual_no_yes_p": 0.5000, "mean_adjusted": 0.0001, "excludes_zero_rate": 0.0700},
+    "degenerate_clear_count": 0
+  },
+  "provenance": {"started_at": "2026-11-16T12:37:50Z", "seeds": [7], "command": "target/release/introscope yes-bias-audit --seed 7 --n 400 --reps 200 --out results/243-yes-bias-audit.json", "hardware": "linux x86_64", "wall_s": 12.964, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

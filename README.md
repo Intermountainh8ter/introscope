@@ -100,3 +100,15 @@ offline. Results files are never overwritten.
 ## Licence
 
 MIT.
+
+## Yes-bias audit simulation
+
+`results/243-yes-bias-audit.json` simulates a control-adjusted detect score (hit
+rate minus factual-no yes rate) at 400 trials per arm. A graded responder (hit
+rate 0.7734, factual-no yes probability 0.0500) has a mean adjusted score of
+0.7221 and an interval that excludes zero in 1.0 of 200 replicates. Always-yes
+and always-no have a mean adjusted score of 0.0 and exclude zero in 0.0 of
+replicates. A prompt-sensitive responder (0.5 yes on both arms) has a mean
+adjusted score of 0.0001 and excludes zero in 0.07 of replicates. The count of
+degenerate responders that clear the audit is 0. This is a simulation; no model
+has been queried.

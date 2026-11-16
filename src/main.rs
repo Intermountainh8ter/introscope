@@ -29,6 +29,10 @@ USAGE:
       Simulate selfpred advantage on all items and on the disagreement subset
       for a privileged-self, a general-capability and a consensus responder.
 
+  introscope yes-bias-audit --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Score detection hit rate minus factual-no yes rate for a graded
+      responder and for always-yes, always-no and prompt-sensitive
+      responders; count degenerate responders that clear the audit.
   introscope sham-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a sham-controlled detect score (hit rate minus sham
       false-alarm rate) for an injected-concept responder (true d' 1.5), a
@@ -256,6 +260,41 @@ fn run() -> Result<(), String> {
                 arm(&rea),
                 arm(&yes),
                 inj.mean_gap,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "yes-bias-audit" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let graded = simulate_sham_power(0.7734, 0.05, n, reps, resamples, seed);
+            let yes = simulate_sham_power(1.0, 1.0, n, reps, resamples, seed.wrapping_add(5000));
+            let no = simulate_sham_power(0.0, 0.0, n, reps, resamples, seed.wrapping_add(10000));
+            let sens = simulate_sham_power(0.5, 0.5, n, reps, resamples, seed.wrapping_add(15000));
+            let arm = |a: &introscope::ShamArm| {
+                format!(
+                    "{{\"hit_rate\": {:.4}, \"factual_no_yes_p\": {:.4}, \"mean_adjusted\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    a.hit_p, a.sham_fa_p, a.mean_gap, a.excludes_zero_rate
+                )
+            };
+            let clear = [&yes, &no, &sens]
+                .iter()
+                .filter(|a| a.excludes_zero_rate > 0.10)
+                .count();
+            format!(
+                "  \"kind\": \"yes-bias-audit\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"audit\": {{\n    \"graded\": {},\n    \"always_yes\": {},\n    \"always_no\": {},\n    \"prompt_sensitive\": {},\n    \"degenerate_clear_count\": {}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arm(&graded),
+                arm(&yes),
+                arm(&no),
+                arm(&sens),
+                clear,
                 provenance(
                     started,
                     seed,

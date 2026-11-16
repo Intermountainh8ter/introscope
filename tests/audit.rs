@@ -251,3 +251,15 @@ fn selfcross_power_is_deterministic() {
     };
     assert_eq!(sim(s, 0.3, 50, 5, 100, 3), sim(s, 0.3, 50, 5, 100, 3));
 }
+
+#[test]
+fn yes_bias_control_blocks_constant_and_prompt_sensitive_responders() {
+    let graded = introscope::simulate_sham_power(0.77, 0.05, 200, 20, 200, 7);
+    assert!(graded.excludes_zero_rate >= 0.9, "{graded:?}");
+    for (h, f) in [(1.0, 1.0), (0.0, 0.0)] {
+        let a = introscope::simulate_sham_power(h, f, 200, 20, 200, 11);
+        assert_eq!(a.excludes_zero_rate, 0.0, "{a:?}");
+    }
+    let sens = introscope::simulate_sham_power(0.5, 0.5, 200, 20, 200, 12);
+    assert!(sens.excludes_zero_rate <= 0.3, "{sens:?}");
+}

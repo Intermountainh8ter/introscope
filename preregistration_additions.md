@@ -86,3 +86,25 @@ the subset advantage, an informed exclusion rate below 0.95, or a
 general-capability or consensus exclusion rate above 0.10.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T12:37:43Z yes-bias-audit proposal:65a15b4c7bc9cd4f96ad4aae4574edca185a4e37a72c0749cacbba373691d6e7
+
+Hypothesis: with 400 trials per arm, seed 7 and 200 replicates, a graded
+responder (hit probability 0.7734, factual-no yes probability 0.05) has a
+control-adjusted score (hit rate minus factual-no yes rate) whose bootstrap
+interval excludes zero in at least 0.95 of replicates, while always-yes,
+always-no and a prompt-sensitive responder (yes probability 0.5 on both the
+injection prompt and the plain prompt, no concept information) exclude zero in
+at most 0.10 of replicates each. The count of degenerate responders that clear
+the audit is therefore 0, whereas the unadjusted hit rate lets always-yes and
+the prompt-sensitive responder score at least 0.5.
+
+Metric: /audit/degenerate_clear_count.
+
+Expected: equals 0 (range 0 to 0).
+
+Falsifier: any degenerate responder excludes zero in more than 0.10 of
+replicates, or the graded responder excludes zero in fewer than 0.95 of
+replicates.
+
+This is a simulation with no model queried.
