@@ -131,3 +131,25 @@ replicates, or the always-yes yes/no gap excluding zero in more than 0.10 of
 replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-16T12:48:30Z wording-arm proposal:e4afaad7a0565871b3d8542db16ec99a7344f0b1447cb84c19e7d6e3ea60b7c0
+
+Hypothesis: with 400 items per wording, seed 7 and 200 replicates, a
+state-tracking responder (answers fixed by a hidden state, independent of
+wording) has a mean absolute answer shift between the presupposing and neutral
+wordings whose bootstrap interval includes zero in at least 0.95 of
+replicates, while a wording-following responder has a mean shift of at least
+0.50, and always-yes and always-no responders have a shift of 0. The count of
+responders other than the wording-follower and the partly-following responder
+whose shift interval excludes zero is 0.
+
+Metric: /wording/answer_shift_by_responder/wording_follower.
+
+Expected: mean answer shift of the wording-follower between presupposing and
+neutral wordings is at least 0.50 (range 0.50 to 1.0).
+
+Falsifier: wording-follower mean shift below 0.50, or the state-tracking,
+always-yes or always-no responder interval excluding zero in more than 0.05 of
+replicates.
+
+This is a simulation with no model queried.

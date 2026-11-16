@@ -123,3 +123,14 @@ the interval excludes 0.5 in 1.0 of 200 replicates, while the yes/no gap is
 AUROC of 0.5 and excludes 0.5 in 0.0 of replicates; confidence independent of
 status has a mean AUROC of 0.5025 and excludes 0.5 in 0.04 of replicates. This
 is a simulation; no model has been queried.
+
+## Wording-arm simulation
+
+`results/245-wording-arm.json` simulates paired leading wordings (neutral, could,
+did, presupposing) at 400 items per wording and 200 replicates. A
+wording-following responder has a mean answer shift of 1.0 between the
+presupposing and neutral wordings and an interval that excludes zero in 1.0 of
+replicates. A partly wording-following responder has a mean shift of 0.1491 and
+excludes zero in 1.0 of replicates. State-tracking, always-yes and always-no
+responders have a mean shift of 0.0 and exclude zero in 0.0 of replicates. This
+is a simulation; no model has been queried.

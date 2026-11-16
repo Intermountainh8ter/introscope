@@ -293,3 +293,27 @@ fn confidence_channel_is_deterministic() {
         sim(K::Graded(1.0), 50, 5, 100, 3)
     );
 }
+
+#[test]
+fn wording_arm_separates_follower_from_state_tracker() {
+    use introscope::{simulate_wording_arm as sim, WordingResponder as W};
+    let f = sim(W::WordingFollower, 200, 20, 200, 7);
+    assert_eq!(f.mean_shift[2], 1.0, "{f:?}");
+    assert_eq!(f.excludes_zero_rate, 1.0, "{f:?}");
+    for r in [W::AlwaysYes, W::AlwaysNo, W::StateTracking] {
+        let a = sim(r, 200, 20, 200, 8);
+        assert_eq!(a.mean_shift, [0.0; 3], "{a:?}");
+        assert_eq!(a.excludes_zero_rate, 0.0, "{a:?}");
+    }
+    let p = sim(W::PartlyFollowing, 200, 20, 200, 9);
+    assert!(p.mean_shift[2] > 0.05 && p.mean_shift[2] < 0.3, "{p:?}");
+}
+
+#[test]
+fn wording_arm_is_deterministic() {
+    use introscope::{simulate_wording_arm as sim, WordingResponder as W};
+    assert_eq!(
+        sim(W::PartlyFollowing, 50, 5, 100, 3),
+        sim(W::PartlyFollowing, 50, 5, 100, 3)
+    );
+}

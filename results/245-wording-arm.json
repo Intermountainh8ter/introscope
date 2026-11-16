@@ -1,0 +1,24 @@
+{
+  "kind": "wording-arm",
+  "n_per_wording": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "wording": {
+    "responders": {
+      "always_yes": {"mean_shift_could": 0.0000, "mean_shift_did": 0.0000, "mean_shift_presupposing": 0.0000, "excludes_zero_rate": 0.0000},
+      "always_no": {"mean_shift_could": 0.0000, "mean_shift_did": 0.0000, "mean_shift_presupposing": 0.0000, "excludes_zero_rate": 0.0000},
+      "state_tracking": {"mean_shift_could": 0.0000, "mean_shift_did": 0.0000, "mean_shift_presupposing": 0.0000, "excludes_zero_rate": 0.0000},
+      "wording_follower": {"mean_shift_could": 0.0000, "mean_shift_did": 1.0000, "mean_shift_presupposing": 1.0000, "excludes_zero_rate": 1.0000},
+      "partly_following": {"mean_shift_could": 0.0000, "mean_shift_did": 0.1504, "mean_shift_presupposing": 0.1491, "excludes_zero_rate": 1.0000}
+    },
+    "answer_shift_by_responder": {
+      "always_yes": 0.0000,
+      "always_no": 0.0000,
+      "state_tracking": 0.0000,
+      "wording_follower": 1.0000,
+      "partly_following": 0.1491
+    },
+    "degenerate_or_state_clear_count": 0
+  },
+  "provenance": {"started_at": "2026-11-16T12:48:36Z", "seeds": [7], "command": "target/release/introscope wording-arm --seed 7 --n 400 --reps 200 --out results/245-wording-arm.json", "hardware": "linux x86_64", "wall_s": 7.046, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

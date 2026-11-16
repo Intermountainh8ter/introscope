@@ -1,7 +1,7 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
     simulate_detect_power, simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power,
-    synth_trials, ConfidenceKind, Responder, SelfCrossSpec,
+    simulate_wording_arm, synth_trials, ConfidenceKind, Responder, SelfCrossSpec, WordingResponder,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -33,6 +33,10 @@ USAGE:
       Score detection hit rate minus factual-no yes rate for a graded
       responder and for always-yes, always-no and prompt-sensitive
       responders; count degenerate responders that clear the audit.
+  introscope wording-arm --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Score the answer shift between paired leading wordings (neutral, could,
+      did, presupposing) for always-yes, always-no, state-tracking,
+      wording-following and partly wording-following responders.
   introscope confidence-channel --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Score AUROC of attached confidence for injected versus sham trials for
       always-yes responders with graded, constant and noise confidence,
@@ -306,6 +310,55 @@ fn run() -> Result<(), String> {
                 arm(&c),
                 arm(&z),
                 g.mean_auroc,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "wording-arm" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            use WordingResponder as W;
+            let specs = [
+                ("always_yes", W::AlwaysYes),
+                ("always_no", W::AlwaysNo),
+                ("state_tracking", W::StateTracking),
+                ("wording_follower", W::WordingFollower),
+                ("partly_following", W::PartlyFollowing),
+            ];
+            let mut arms = Vec::new();
+            let mut shifts = Vec::new();
+            let mut clear = 0;
+            for (i, (name, r)) in specs.iter().enumerate() {
+                let a = simulate_wording_arm(
+                    *r,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(5000 * i as u64),
+                );
+                if a.excludes_zero_rate > 0.05
+                    && !matches!(r, W::WordingFollower | W::PartlyFollowing)
+                {
+                    clear += 1;
+                }
+                arms.push(format!(
+                    "      \"{}\": {{\"mean_shift_could\": {:.4}, \"mean_shift_did\": {:.4}, \"mean_shift_presupposing\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    name, a.mean_shift[0], a.mean_shift[1], a.mean_shift[2], a.excludes_zero_rate
+                ));
+                shifts.push(format!("      \"{}\": {:.4}", name, a.mean_shift[2]));
+            }
+            format!(
+                "  \"kind\": \"wording-arm\",\n  \"n_per_wording\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"wording\": {{\n    \"responders\": {{\n{}\n    }},\n    \"answer_shift_by_responder\": {{\n{}\n    }},\n    \"degenerate_or_state_clear_count\": {}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arms.join(",\n"),
+                shifts.join(",\n"),
+                clear,
                 provenance(
                     started,
                     seed,

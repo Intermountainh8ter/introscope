@@ -939,3 +939,89 @@ mod tests {
         assert_eq!(json_escape("a\"b\\c\n\u{1}"), "a\\\"b\\\\c\\n\\u0001");
     }
 }
+
+// ---------------------------------------------------------------- wording arm
+
+/// Leading wordings of one first-person question.
+pub const WORDINGS: [&str; 4] = ["neutral", "could", "did", "presupposing"];
+
+/// Responders for the wording arm.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum WordingResponder {
+    AlwaysYes,
+    AlwaysNo,
+    /// Answer fixed per item by a hidden state, independent of wording.
+    StateTracking,
+    /// Says yes exactly when the wording leads towards yes (did, presupposing).
+    WordingFollower,
+    /// Hidden-state answer, flipped to yes with probability 0.3 under the
+    /// two leading wordings (did, presupposing).
+    PartlyFollowing,
+}
+
+/// Result of simulating one responder over the four wordings.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WordingArm {
+    /// Mean answer shift (yes rate under the wording minus neutral) for
+    /// could, did and presupposing, in that order.
+    pub mean_shift: [f64; 3],
+    /// Fraction of replicates whose paired bootstrap interval of the
+    /// presupposing-minus-neutral shift excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` items each asked under all four wordings and
+/// score the paired answer shift against the neutral wording.
+pub fn simulate_wording_arm(
+    r: WordingResponder,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> WordingArm {
+    let mut rng = Rng::new(seed);
+    let (mut sums, mut excl) = ([0.0f64; 3], 0usize);
+    for rep in 0..reps {
+        let mut ans = vec![[false; 4]; n];
+        for row in ans.iter_mut() {
+            let state = rng.coin(0.5);
+            for (w, slot) in row.iter_mut().enumerate() {
+                let leading = w >= 2;
+                *slot = match r {
+                    WordingResponder::AlwaysYes => true,
+                    WordingResponder::AlwaysNo => false,
+                    WordingResponder::StateTracking => state,
+                    WordingResponder::WordingFollower => leading,
+                    WordingResponder::PartlyFollowing => {
+                        let flip = leading && rng.coin(0.3);
+                        state || flip
+                    }
+                };
+            }
+        }
+        let shift_of = |idx: &[usize], w: usize| {
+            let s: f64 = idx
+                .iter()
+                .map(|&i| ans[i][w] as i32 as f64 - ans[i][0] as i32 as f64)
+                .sum();
+            s / idx.len() as f64
+        };
+        let all: Vec<usize> = (0..n).collect();
+        for (k, sum) in sums.iter_mut().enumerate() {
+            *sum += shift_of(&all, k + 1);
+        }
+        let ci = bootstrap_ci(
+            n,
+            |idx| shift_of(idx, 3),
+            resamples,
+            seed.wrapping_add(rep as u64 + 1),
+        );
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    WordingArm {
+        mean_shift: sums.map(|s| s / reps as f64),
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}
