@@ -1,0 +1,12 @@
+{
+  "kind": "selfpred-power",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "selfpred_power": {
+    "informed": {"self_accuracy": 0.75, "cross_accuracy": 0.60, "mean_advantage": 0.1508, "excludes_zero_rate": 0.9900},
+    "degenerate": {"self_accuracy": 0.60, "cross_accuracy": 0.60, "mean_advantage": -0.0014, "excludes_zero_rate": 0.0500},
+    "advantage_gap": 0.1521
+  },
+  "provenance": {"started_at": "2026-11-16T10:44:01Z", "seeds": [7], "command": "target/release/introscope selfpred-power --seed 7 --n 400 --reps 200 --out results/226-selfpred-power.json", "hardware": "linux x86_64", "wall_s": 6.845, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

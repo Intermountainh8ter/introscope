@@ -354,6 +354,57 @@ pub fn simulate_detect_power(
     }
 }
 
+/// Result of simulating the selfpred measure at known accuracies.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SelfPredArm {
+    pub self_accuracy: f64,
+    pub cross_accuracy: f64,
+    pub mean_advantage: f64,
+    /// Fraction of replicates whose bootstrap interval excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` selfpred tables of `n` self and `n` cross trials where the
+/// prediction is right with the given probabilities, score each with the
+/// production scorer, and summarise.
+pub fn simulate_selfpred_power(
+    self_accuracy: f64,
+    cross_accuracy: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> SelfPredArm {
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let mut trials = Vec::with_capacity(2 * n);
+        for i in 0..2 * n {
+            let own = i < n;
+            let right = rng.coin(if own { self_accuracy } else { cross_accuracy });
+            trials.push(Trial {
+                task: "selfpred".into(),
+                item: format!("p{rep}-{i}"),
+                variant: if own { "self" } else { "cross" }.into(),
+                truth: "a".into(),
+                report: if right { "a" } else { "b" }.into(),
+            });
+        }
+        let d = score_selfpred(&trials, resamples, seed.wrapping_add(rep as u64 + 1))
+            .expect("both arms present");
+        sum += d.advantage;
+        if d.advantage_ci.0 > 0.0 || d.advantage_ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    SelfPredArm {
+        self_accuracy,
+        cross_accuracy,
+        mean_advantage: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}
+
 pub fn score_selfpred(trials: &[Trial], resamples: usize, seed: u64) -> Option<SelfPred> {
     let pick = |variant: &str| -> Vec<bool> {
         trials

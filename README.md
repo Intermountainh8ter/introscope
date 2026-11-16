@@ -50,12 +50,22 @@ replicates. A matched-random-direction responder with true d' of 0 has a mean
 d' of -0.0058 and excludes zero in 0.04 of replicates. The sensitivity gap is
 1.5062. This is a simulation; no model has been queried.
 
+## Selfpred-power simulation
+
+`results/226-selfpred-power.json` simulates the selfpred measure at 400 self and
+400 cross trials per arm. A self-predictor with self accuracy 0.75 and cross
+accuracy 0.60 has a mean advantage of 0.1508 and an interval that excludes
+zero in 0.99 of 200 replicates. A degenerate responder with accuracy 0.60 on
+both has a mean advantage of -0.0014 and excludes zero in 0.05 of replicates.
+The advantage gap is 0.1521. This is a simulation; no model has been queried.
+
 ## Use
 
 ```
 cargo test --locked
 cargo run --locked --release -- baselines --seed 7 --n 400 --out results/<name>.json
 cargo run --locked --release -- detect-power --seed 7 --n 400 --reps 200 --out results/<name>.json
+cargo run --locked --release -- selfpred-power --seed 7 --n 400 --reps 200 --out results/<name>.json
 cargo run --locked --release -- score --trials trials.tsv --model <name> --out results/<name>.json
 ```
 

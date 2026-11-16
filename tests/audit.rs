@@ -186,3 +186,20 @@ fn detect_power_is_deterministic() {
     let b = introscope::simulate_detect_power(1.0, 50, 5, 100, 3);
     assert_eq!(a, b);
 }
+
+#[test]
+fn selfpred_power_separates_informed_from_degenerate_responder() {
+    let inf = introscope::simulate_selfpred_power(0.75, 0.60, 200, 20, 200, 7);
+    let deg = introscope::simulate_selfpred_power(0.60, 0.60, 200, 20, 200, 8);
+    assert!(inf.excludes_zero_rate >= 0.5, "{inf:?}");
+    assert!(deg.excludes_zero_rate <= 0.3, "{deg:?}");
+    assert!((inf.mean_advantage - 0.15).abs() < 0.05, "{inf:?}");
+    assert!(deg.mean_advantage.abs() < 0.05, "{deg:?}");
+}
+
+#[test]
+fn selfpred_power_is_deterministic() {
+    let a = introscope::simulate_selfpred_power(0.7, 0.6, 50, 5, 100, 3);
+    let b = introscope::simulate_selfpred_power(0.7, 0.6, 50, 5, 100, 3);
+    assert_eq!(a, b);
+}

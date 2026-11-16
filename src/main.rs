@@ -1,6 +1,6 @@
 use introscope::{
-    iso_utc, json_escape, parse_trials, report_json, score, simulate_detect_power, synth_trials,
-    Responder,
+    iso_utc, json_escape, parse_trials, report_json, score, simulate_detect_power,
+    simulate_selfpred_power, synth_trials, Responder,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -17,6 +17,12 @@ USAGE:
       Simulate the detect measure for an injected-concept responder (true
       d' 1.5) and a matched-random-direction responder (true d' 0) and report
       the sensitivity gap and how often each interval excludes zero.
+
+  introscope selfpred-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate the selfpred measure for a self-predictor with privileged access
+      (self accuracy 0.75, cross accuracy 0.60) and a degenerate responder
+      with equal accuracy on both (0.60) and report the advantage gap and how
+      often each interval excludes zero.
 
   introscope score --trials <trials.tsv> --out <results.json> [--seed 7] [--resamples 2000]
                    [--model <name>] [--source <url-or-label> --license <licence>]
@@ -114,6 +120,34 @@ fn run() -> Result<(), String> {
                 arm(&inj),
                 arm(&rnd),
                 inj.mean_d_prime - rnd.mean_d_prime,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "selfpred-power" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let inf = simulate_selfpred_power(0.75, 0.60, n, reps, resamples, seed);
+            let deg =
+                simulate_selfpred_power(0.60, 0.60, n, reps, resamples, seed.wrapping_add(5000));
+            let arm = |a: &introscope::SelfPredArm| {
+                format!(
+                    "{{\"self_accuracy\": {:.2}, \"cross_accuracy\": {:.2}, \"mean_advantage\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    a.self_accuracy, a.cross_accuracy, a.mean_advantage, a.excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"selfpred-power\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"selfpred_power\": {{\n    \"informed\": {},\n    \"degenerate\": {},\n    \"advantage_gap\": {:.4}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arm(&inf),
+                arm(&deg),
+                inf.mean_advantage - deg.mean_advantage,
                 provenance(
                     started,
                     seed,
