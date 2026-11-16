@@ -223,3 +223,31 @@ fn sham_power_is_deterministic() {
     let b = introscope::simulate_sham_power(0.7, 0.3, 50, 5, 100, 3);
     assert_eq!(a, b);
 }
+
+#[test]
+fn selfcross_subset_exposes_privileged_self_and_not_general_or_consensus() {
+    use introscope::{simulate_selfcross_power as sim, SelfCrossSpec as S};
+    let spec = |a, b, c, d| S {
+        self_disagree: a,
+        cross_disagree: b,
+        self_consensus: c,
+        cross_consensus: d,
+    };
+    let own = sim(spec(0.8, 0.5, 0.9, 0.9), 0.3, 400, 20, 200, 7);
+    let gen = sim(spec(0.7, 0.7, 0.7, 0.7), 0.3, 400, 20, 200, 8);
+    assert!(own.subset_advantage > own.full_advantage, "{own:?}");
+    assert!(own.subset_excludes_zero_rate >= 0.8, "{own:?}");
+    assert!(gen.subset_excludes_zero_rate <= 0.3, "{gen:?}");
+}
+
+#[test]
+fn selfcross_power_is_deterministic() {
+    use introscope::{simulate_selfcross_power as sim, SelfCrossSpec as S};
+    let s = S {
+        self_disagree: 0.8,
+        cross_disagree: 0.5,
+        self_consensus: 0.9,
+        cross_consensus: 0.9,
+    };
+    assert_eq!(sim(s, 0.3, 50, 5, 100, 3), sim(s, 0.3, 50, 5, 100, 3));
+}

@@ -64,3 +64,25 @@ fewer than 0.95 of replicates.
 
 This is a simulation with no model queried. It fixes the power and the
 false-positive floor of a sham-controlled detect score before the model run.
+
+## 2026-11-16T11:27:00Z selfcross-subset proposal:5c0471112a5bf3d98268c210617a319de3b6e3989b10a2ea62d7eb66ddf40603
+
+Hypothesis: with 400 items per arm, seed 7 and a disagreement share of 0.3, a
+privileged-self responder (accuracy 0.80 against cross accuracy 0.50 on
+disagreement items, equal accuracy on consensus items) has a disagreement-subset
+self-minus-cross advantage of at least 0.15 whose bootstrap interval excludes
+zero in at least 0.95 of 200 replicates, while its full-set advantage is smaller
+than its subset advantage. A general-capability responder and a consensus
+responder (no self-specific information) exclude zero on the subset in at most
+0.10 of replicates.
+
+Metric: /selfcross/disagreement_subset_advantage, the privileged-self mean
+disagreement-subset advantage.
+
+Expected: at least 0.15 (range 0.15 to 0.35) and above the full-set advantage.
+
+Falsifier: a subset advantage below 0.15, a full-set advantage not smaller than
+the subset advantage, an informed exclusion rate below 0.95, or a
+general-capability or consensus exclusion rate above 0.10.
+
+This is a simulation with no model queried.

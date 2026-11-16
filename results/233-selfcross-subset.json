@@ -1,0 +1,15 @@
+{
+  "kind": "selfcross-power",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "disagree_share": 0.30,
+  "selfcross": {
+    "disagreement_subset_advantage": 0.3031,
+    "full_set_advantage": 0.0923,
+    "privileged_self": {"self_disagree": 0.80, "cross_disagree": 0.50, "self_consensus": 0.90, "cross_consensus": 0.90, "full_advantage": 0.0923, "full_excludes_zero_rate": 0.9300, "disagreement_subset_advantage": 0.3031, "subset_excludes_zero_rate": 1.0000},
+    "general_capability": {"self_disagree": 0.70, "cross_disagree": 0.70, "self_consensus": 0.70, "cross_consensus": 0.70, "full_advantage": -0.0018, "full_excludes_zero_rate": 0.0550, "disagreement_subset_advantage": 0.0046, "subset_excludes_zero_rate": 0.0500},
+    "consensus": {"self_disagree": 0.50, "cross_disagree": 0.50, "self_consensus": 0.90, "cross_consensus": 0.90, "full_advantage": 0.0027, "full_excludes_zero_rate": 0.0350, "disagreement_subset_advantage": 0.0033, "subset_excludes_zero_rate": 0.0400}
+  },
+  "provenance": {"started_at": "2026-11-16T11:27:26Z", "seeds": [7], "command": "target/release/introscope selfcross-power --seed 7 --n 400 --reps 200 --disagree 0.3 --out results/233-selfcross-subset.json", "hardware": "linux x86_64", "wall_s": 12.695, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

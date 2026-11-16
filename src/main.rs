@@ -1,6 +1,7 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_detect_power,
-    simulate_selfpred_power, simulate_sham_power, synth_trials, Responder,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, synth_trials,
+    Responder, SelfCrossSpec,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -24,6 +25,10 @@ USAGE:
       with equal accuracy on both (0.60) and report the advantage gap and how
       often each interval excludes zero.
 
+  introscope selfcross-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--disagree 0.3] [--resamples 2000]
+      Simulate selfpred advantage on all items and on the disagreement subset
+      for a privileged-self, a general-capability and a consensus responder.
+
   introscope sham-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a sham-controlled detect score (hit rate minus sham
       false-alarm rate) for an injected-concept responder (true d' 1.5), a
@@ -42,6 +47,14 @@ impl Args {
     fn value(&self, flag: &str) -> Option<&str> {
         let i = self.0.iter().position(|a| a == flag)?;
         self.0.get(i + 1).map(String::as_str)
+    }
+    fn float(&self, flag: &str, default: f64) -> Result<f64, String> {
+        match self.value(flag) {
+            None => Ok(default),
+            Some(v) => v
+                .parse()
+                .map_err(|_| format!("{flag} needs a number, got `{v}`")),
+        }
     }
     fn number(&self, flag: &str, default: u64) -> Result<u64, String> {
         match self.value(flag) {
@@ -154,6 +167,66 @@ fn run() -> Result<(), String> {
                 arm(&inf),
                 arm(&deg),
                 inf.mean_advantage - deg.mean_advantage,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "selfcross-power" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let disagree = args.float("--disagree", 0.3)?;
+            let spec = |a, b, c, d| SelfCrossSpec {
+                self_disagree: a,
+                cross_disagree: b,
+                self_consensus: c,
+                cross_consensus: d,
+            };
+            let own = simulate_selfcross_power(
+                spec(0.8, 0.5, 0.9, 0.9),
+                disagree,
+                n,
+                reps,
+                resamples,
+                seed,
+            );
+            let gen = simulate_selfcross_power(
+                spec(0.7, 0.7, 0.7, 0.7),
+                disagree,
+                n,
+                reps,
+                resamples,
+                seed.wrapping_add(5000),
+            );
+            let con = simulate_selfcross_power(
+                spec(0.5, 0.5, 0.9, 0.9),
+                disagree,
+                n,
+                reps,
+                resamples,
+                seed.wrapping_add(10000),
+            );
+            let arm = |a: &introscope::SelfCrossArm| {
+                format!(
+                    "{{\"self_disagree\": {:.2}, \"cross_disagree\": {:.2}, \"self_consensus\": {:.2}, \"cross_consensus\": {:.2}, \"full_advantage\": {:.4}, \"full_excludes_zero_rate\": {:.4}, \"disagreement_subset_advantage\": {:.4}, \"subset_excludes_zero_rate\": {:.4}}}",
+                    a.spec.self_disagree, a.spec.cross_disagree, a.spec.self_consensus, a.spec.cross_consensus,
+                    a.full_advantage, a.full_excludes_zero_rate, a.subset_advantage, a.subset_excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"selfcross-power\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"disagree_share\": {:.2},\n  \"selfcross\": {{\n    \"disagreement_subset_advantage\": {:.4},\n    \"full_set_advantage\": {:.4},\n    \"privileged_self\": {},\n    \"general_capability\": {},\n    \"consensus\": {}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                disagree,
+                own.subset_advantage,
+                own.full_advantage,
+                arm(&own),
+                arm(&gen),
+                arm(&con),
                 provenance(
                     started,
                     seed,

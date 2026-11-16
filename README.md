@@ -71,6 +71,17 @@ zero in 0.04 of replicates. An always-yes responder has a mean gap of 0.0 and
 excludes zero in 0.0 of replicates. This is a simulation; no model has been
 queried.
 
+## Selfcross-power simulation
+
+`results/233-selfcross-subset.json` simulates the selfpred measure at 400 self
+and 400 cross items per arm with a disagreement share of 0.30. A privileged-self
+responder (accuracy 0.80 against 0.50 on disagreement items, 0.90 on both arms
+for consensus items) has a disagreement-subset advantage of 0.3031 with an
+interval that excludes zero in 1.0 of 200 replicates, against a full-set
+advantage of 0.0923. A general-capability responder (0.70 on every item) has a
+subset advantage of 0.0046 and excludes zero in 0.05 of replicates; a consensus
+responder has 0.0033 and 0.04. This is a simulation; no model has been queried.
+
 ## Use
 
 ```

@@ -454,6 +454,83 @@ pub fn simulate_selfpred_power(
     }
 }
 
+/// Self-versus-cross prediction accuracies split by item type.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SelfCrossSpec {
+    pub self_disagree: f64,
+    pub cross_disagree: f64,
+    pub self_consensus: f64,
+    pub cross_consensus: f64,
+}
+
+/// Advantage on all items and on the disagreement subset for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SelfCrossArm {
+    pub spec: SelfCrossSpec,
+    pub full_advantage: f64,
+    pub full_excludes_zero_rate: f64,
+    pub subset_advantage: f64,
+    pub subset_excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` selfpred tables of `n` self and `n` cross items where a
+/// share `disagree` of the items are disagreement items (self and cross
+/// predictors would differ), and score both the full set and the subset.
+pub fn simulate_selfcross_power(
+    spec: SelfCrossSpec,
+    disagree: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> SelfCrossArm {
+    let mut rng = Rng::new(seed);
+    let n_dis = (disagree * n as f64).round() as usize;
+    let excl = |d: &SelfPred| d.advantage_ci.0 > 0.0 || d.advantage_ci.1 < 0.0;
+    let (mut fsum, mut ssum, mut fx, mut sx) = (0.0, 0.0, 0usize, 0usize);
+    for rep in 0..reps {
+        let mut all = Vec::with_capacity(2 * n);
+        let mut sub = Vec::with_capacity(2 * n_dis);
+        for i in 0..2 * n {
+            let own = i < n;
+            let dis = i % n < n_dis;
+            let p = match (own, dis) {
+                (true, true) => spec.self_disagree,
+                (false, true) => spec.cross_disagree,
+                (true, false) => spec.self_consensus,
+                (false, false) => spec.cross_consensus,
+            };
+            let right = rng.coin(p);
+            let t = Trial {
+                task: "selfpred".into(),
+                item: format!("s{rep}-{i}"),
+                variant: if own { "self" } else { "cross" }.into(),
+                truth: "a".into(),
+                report: if right { "a" } else { "b" }.into(),
+            };
+            if dis {
+                sub.push(t.clone());
+            }
+            all.push(t);
+        }
+        let s0 = seed.wrapping_add(rep as u64 + 1);
+        let f = score_selfpred(&all, resamples, s0).expect("both arms present");
+        let g = score_selfpred(&sub, resamples, s0).expect("both arms present");
+        fsum += f.advantage;
+        ssum += g.advantage;
+        fx += excl(&f) as usize;
+        sx += excl(&g) as usize;
+    }
+    let r = reps as f64;
+    SelfCrossArm {
+        spec,
+        full_advantage: fsum / r,
+        full_excludes_zero_rate: fx as f64 / r,
+        subset_advantage: ssum / r,
+        subset_excludes_zero_rate: sx as f64 / r,
+    }
+}
+
 pub fn score_selfpred(trials: &[Trial], resamples: usize, seed: u64) -> Option<SelfPred> {
     let pick = |variant: &str| -> Vec<bool> {
         trials
