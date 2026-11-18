@@ -1,0 +1,16 @@
+{
+  "kind": "detect-vs-identify",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "concepts": 10,
+  "detect_vs_identify": {
+    "identification_margin_at_separation": 0.6985,
+    "content_agnostic": {"concept_rate": 0.5997, "prompt_rate": 0.1019, "prompt_excludes_zero_rate": 1.0000, "identification_accuracy": 0.0997, "margin": 0.0000, "margin_up_rate": 0.0000},
+    "content_aware": {"concept_rate": 0.7006, "prompt_rate": 0.1011, "prompt_excludes_zero_rate": 1.0000, "identification_accuracy": 0.7982, "margin": 0.6985, "margin_up_rate": 1.0000},
+    "always_yes": {"concept_rate": 1.0000, "prompt_rate": 1.0000, "prompt_excludes_zero_rate": 0.0000, "identification_accuracy": 0.0999, "margin": 0.0003, "margin_up_rate": 0.0100},
+    "always_no": {"concept_rate": 0.0000, "prompt_rate": 0.0000, "prompt_excludes_zero_rate": 0.0000, "identification_accuracy": 0.1000, "margin": 0.0003, "margin_up_rate": 0.0350},
+    "fair_coin": {"concept_rate": 0.5011, "prompt_rate": 0.4996, "prompt_excludes_zero_rate": 0.0350, "identification_accuracy": 0.0973, "margin": -0.0023, "margin_up_rate": 0.0150}
+  },
+  "provenance": {"started_at": "2026-11-18T22:22:39Z", "seeds": [7], "command": "target/release/introscope detect-vs-identify --seed 7 --reps 200 --out results/451-detect-vs-identify.json", "hardware": "linux x86_64", "wall_s": 41.904, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

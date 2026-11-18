@@ -1,10 +1,10 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
-    simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_three_arm,
-    simulate_wording_arm, simulate_wording_cell, synth_trials, BaselinePredictor, ConfidenceKind,
-    ImpactControl, ImpactResponder, Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
+    simulate_input_only_baseline, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_three_arm, simulate_wording_arm, simulate_wording_cell,
+    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming,
+    Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -25,6 +25,11 @@ USAGE:
   introscope wording-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate five yes-lead wordings (0.0 to 0.4 added to every arm) and report
       raw yes-rate spread and factual-control-adjusted spread per responder.
+
+  introscope detect-vs-identify --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a content-agnostic and a content-aware responder (plus degenerate
+      ones) and report detection against a prompt-only arm and concept
+      identification accuracy among detected injected trials.
 
   introscope perturbation-confound --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a perturbation-reactive responder and a state reader over the
@@ -328,6 +333,46 @@ fn run() -> Result<(), String> {
                 resamples,
                 cells[0].concept_minus_random,
                 cells[0].random_excludes_zero_rate,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "detect-vs-identify" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let k = 10usize;
+            let specs = [
+                ("content_agnostic", (0.60, 0.10, Naming::Fixed)),
+                ("content_aware", (0.70, 0.10, Naming::Aware(0.80))),
+                ("always_yes", (1.0, 1.0, Naming::Fixed)),
+                ("always_no", (0.0, 0.0, Naming::Random)),
+                ("fair_coin", (0.5, 0.5, Naming::Random)),
+            ];
+            let plain: Vec<_> = specs.iter().map(|s| s.1).collect();
+            let res = simulate_detect_identify(&plain, k, n, reps, resamples, seed);
+            let blocks: Vec<String> = specs
+                .iter()
+                .zip(res.iter())
+                .map(|((name, _), c)| {
+                    format!(
+                        "    \"{}\": {{\"concept_rate\": {:.4}, \"prompt_rate\": {:.4}, \"prompt_excludes_zero_rate\": {:.4}, \"identification_accuracy\": {:.4}, \"margin\": {:.4}, \"margin_up_rate\": {:.4}}}",
+                        name, c.concept_rate, c.prompt_rate, c.prompt_excludes_zero_rate,
+                        c.identification_accuracy, c.margin, c.margin_up_rate
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"detect-vs-identify\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"concepts\": {},\n  \"detect_vs_identify\": {{\n    \"identification_margin_at_separation\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                k,
+                res[1].margin,
                 blocks.join(",\n"),
                 provenance(
                     started,

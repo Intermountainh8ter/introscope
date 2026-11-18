@@ -1345,3 +1345,131 @@ pub fn simulate_three_arm(
         prompt_excludes_zero_rate: excl[1] as f64 / r,
     }
 }
+
+/// How a simulated responder names a concept after saying yes.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Naming {
+    /// Always names concept 0, whatever was injected.
+    Fixed,
+    /// Names a uniformly random concept.
+    Random,
+    /// Names the injected concept with this probability, otherwise a wrong one.
+    Aware(f64),
+}
+
+/// Summary of one responder in the detect-versus-identify simulation.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DetectIdentify {
+    /// Mean yes rate on the injected-concept arm.
+    pub concept_rate: f64,
+    /// Mean yes rate on the prompt-only arm.
+    pub prompt_rate: f64,
+    /// Fraction of replicates whose concept-minus-prompt interval excludes zero.
+    pub prompt_excludes_zero_rate: f64,
+    /// Mean identification accuracy among detected injected trials (1/k if none).
+    pub identification_accuracy: f64,
+    /// Mean accuracy minus the reference responder's accuracy.
+    pub margin: f64,
+    /// Fraction of replicates whose margin interval lies above zero.
+    pub margin_up_rate: f64,
+}
+
+fn naming_draw(naming: Naming, truth: usize, k: usize, rng: &mut Rng) -> usize {
+    match naming {
+        Naming::Fixed => 0,
+        Naming::Random => rng.below(k),
+        Naming::Aware(q) => {
+            if rng.coin(q) {
+                truth
+            } else {
+                (truth + 1 + rng.below(k - 1)) % k
+            }
+        }
+    }
+}
+
+/// Simulate responders over `n` injected-concept trials (one of `k` equally
+/// likely concepts) and `n` prompt-only trials. Each responder is
+/// `(p_yes_concept, p_yes_prompt, naming)`; the first is the reference for the
+/// identification margin. All responders see the same true concepts in a replicate.
+pub fn simulate_detect_identify(
+    specs: &[(f64, f64, Naming)],
+    k: usize,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> Vec<DetectIdentify> {
+    let m = specs.len();
+    let mut rng = Rng::new(seed);
+    let mut acc = vec![[0.0f64; 5]; m]; // concept, prompt, excl, accuracy, margin
+    let mut up = vec![0usize; m];
+    for rep in 0..reps {
+        let truth: Vec<usize> = (0..n).map(|_| rng.below(k)).collect();
+        // per responder: (yes on concept arm, named concept, yes on prompt arm)
+        let sims: Vec<(Vec<bool>, Vec<usize>, Vec<bool>)> = specs
+            .iter()
+            .map(|&(pc, pp, nm)| {
+                let yes: Vec<bool> = (0..n).map(|_| rng.coin(pc)).collect();
+                let named: Vec<usize> = truth
+                    .iter()
+                    .map(|&t| naming_draw(nm, t, k, &mut rng))
+                    .collect();
+                let pr: Vec<bool> = (0..n).map(|_| rng.coin(pp)).collect();
+                (yes, named, pr)
+            })
+            .collect();
+        let ident = |s: &(Vec<bool>, Vec<usize>, Vec<bool>), idx: &[usize]| {
+            let det: Vec<usize> = idx.iter().copied().filter(|&i| s.0[i % n]).collect();
+            if det.is_empty() {
+                return 1.0 / k as f64;
+            }
+            det.iter().filter(|&&i| s.1[i % n] == truth[i % n]).count() as f64 / det.len() as f64
+        };
+        let all: Vec<usize> = (0..n).collect();
+        let ref_acc = ident(&sims[0], &all);
+        for (j, s) in sims.iter().enumerate() {
+            acc[j][0] += s.0.iter().filter(|&&b| b).count() as f64 / n as f64;
+            acc[j][1] += s.2.iter().filter(|&&b| b).count() as f64 / n as f64;
+            let gap_of = |idx: &[usize]| {
+                let h = idx[..n].iter().filter(|&&i| s.0[i % n]).count();
+                let f = idx[n..].iter().filter(|&&i| s.2[i % n]).count();
+                (h as f64 - f as f64) / n as f64
+            };
+            let ci = bootstrap_ci(
+                2 * n,
+                gap_of,
+                resamples,
+                seed.wrapping_add(rep as u64 + 1 + 1000 * j as u64),
+            );
+            if ci.0 > 0.0 || ci.1 < 0.0 {
+                acc[j][2] += 1.0;
+            }
+            let a = ident(s, &all);
+            acc[j][3] += a;
+            acc[j][4] += a - ref_acc;
+            let r0 = &sims[0];
+            let margin_of = |idx: &[usize]| ident(s, idx) - ident(r0, idx);
+            let mci = bootstrap_ci(
+                n,
+                margin_of,
+                resamples,
+                seed.wrapping_add(rep as u64 + 1 + 77_000 + 1000 * j as u64),
+            );
+            if mci.0 > 0.0 {
+                up[j] += 1;
+            }
+        }
+    }
+    let r = reps as f64;
+    (0..m)
+        .map(|j| DetectIdentify {
+            concept_rate: acc[j][0] / r,
+            prompt_rate: acc[j][1] / r,
+            prompt_excludes_zero_rate: acc[j][2] / r,
+            identification_accuracy: acc[j][3] / r,
+            margin: acc[j][4] / r,
+            margin_up_rate: up[j] as f64 / r,
+        })
+        .collect()
+}

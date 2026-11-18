@@ -308,3 +308,28 @@ or its concept-minus-random rate is above 0.10, or the state-reader excludes
 zero against either control in fewer than 0.95 of replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T22:21:55Z detect-vs-identify proposal:adaa27888a56de59713beb0ee232259d07254e7aeb6e31207abf0b3ebe498b0d
+
+Hypothesis: with seed 7, 400 trials per arm, 10 equally likely concepts and 200
+replicates, a content-agnostic responder (yes probability 0.60 under the
+concept arm and the matched random arm, 0.10 under the prompt-only arm; always
+names the same concept) has a concept-minus-prompt detection interval excluding
+zero in at least 0.95 of replicates and identification accuracy among detected
+injected trials within 0.05 of 0.10, while a content-aware responder (yes 0.70
+concept, 0.10 random, 0.10 prompt-only; names the injected concept with
+probability 0.80 when it says yes) has a mean identification-accuracy margin
+over the agnostic responder of at least 0.50; always-yes, always-no and a fair
+coin show a margin interval excluding zero in the upward direction in at most
+0.10 of replicates.
+
+Metric: /detect_vs_identify/identification_margin_at_separation.
+
+Expected: at least 0.50 (range 0.50 to 0.80).
+
+Falsifier: the mean margin is below 0.50, or the agnostic responder's
+concept-minus-prompt interval excludes zero in fewer than 0.95 of replicates,
+or its identification accuracy is farther than 0.05 from 0.10, or any
+degenerate responder exceeds a margin interval rate of 0.10.
+
+This is a simulation with no model queried.

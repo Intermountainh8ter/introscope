@@ -217,3 +217,16 @@ of -0.0007 that excludes zero in 0.03 of replicates. A state reader (0.70, 0.10,
 0.10) excludes zero against both controls in 1.0 of replicates. A prompt-only
 control alone would be fooled; the matched-random control is not. This is a
 simulation; no model has been queried.
+
+## Detect-versus-identify simulation
+
+`results/451-detect-vs-identify.json` simulates 400 trials per arm, 10 concepts
+and 200 replicates. A content-agnostic responder (yes probability 0.60 on
+injected trials, 0.10 on prompt-only trials, always naming one concept) has a
+concept-minus-prompt interval that excludes zero in 1.0 of replicates and an
+identification accuracy of 0.0997 among detected injected trials. A
+content-aware responder (identifies the concept with probability 0.80 when it
+says yes) has an identification accuracy of 0.7982, a margin of 0.6985 over the
+agnostic responder. Always-yes, always-no and a fair coin exceed the margin
+interval in 0.01, 0.035 and 0.015 of replicates. This is a simulation; no model
+has been queried.
