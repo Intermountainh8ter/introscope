@@ -3,8 +3,9 @@ use introscope::{
     simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
     simulate_input_only_baseline, simulate_selfcross_power, simulate_selfpred_power,
     simulate_sham_power, simulate_three_arm, simulate_wording_arm, simulate_wording_cell,
-    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming,
-    Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_wording_design, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
+    ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
+    CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -30,6 +31,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope wording-confounded-design --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a wording-follower and a true-state responder in a design where
+      injection is paired with leading wording and in a wording-balanced design;
+      report mean d' and how often each interval excludes zero.
 
   introscope perturbation-confound --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a perturbation-reactive responder and a state reader over the
@@ -373,6 +379,66 @@ fn run() -> Result<(), String> {
                 resamples,
                 k,
                 res[1].margin,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "wording-confounded-design" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let follower = WordingProbs {
+                injected_leading: 0.70,
+                injected_neutral: 0.30,
+                noise_leading: 0.70,
+                noise_neutral: 0.30,
+            };
+            let state = WordingProbs {
+                injected_leading: 0.7734,
+                injected_neutral: 0.7734,
+                noise_leading: 0.2266,
+                noise_neutral: 0.2266,
+            };
+            let cells = [
+                ("follower_confounded", follower, true),
+                ("follower_balanced", follower, false),
+                ("true_state_confounded", state, true),
+                ("true_state_balanced", state, false),
+            ];
+            let res: Vec<_> = cells
+                .iter()
+                .enumerate()
+                .map(|(k, (_, p, c))| {
+                    simulate_wording_design(
+                        *p,
+                        *c,
+                        n,
+                        reps,
+                        resamples,
+                        seed.wrapping_add(5000 * k as u64),
+                    )
+                })
+                .collect();
+            let blocks: Vec<String> = cells
+                .iter()
+                .zip(res.iter())
+                .map(|((name, _, _), r)| {
+                    format!(
+                        "    \"{}\": {{\"mean_d_prime\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                        name, r.mean_d_prime, r.excludes_zero_rate
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"wording-confounded-design\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"wording_confounded_design\": {{\n    \"confounded_minus_balanced_dprime_for_follower\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                res[0].mean_d_prime - res[1].mean_d_prime,
                 blocks.join(",\n"),
                 provenance(
                     started,

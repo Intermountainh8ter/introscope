@@ -1473,3 +1473,61 @@ pub fn simulate_detect_identify(
         })
         .collect()
 }
+
+/// Yes probabilities by (state, wording) for the wording-design simulation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct WordingProbs {
+    pub injected_leading: f64,
+    pub injected_neutral: f64,
+    pub noise_leading: f64,
+    pub noise_neutral: f64,
+}
+
+/// Simulate `reps` detect tables of `n` injected and `n` noise trials. In the
+/// confounded design every injected trial carries leading wording and every
+/// noise trial neutral wording; in the balanced design each arm is split
+/// evenly between the two wordings. Scored with the production detect scorer.
+pub fn simulate_wording_design(
+    p: WordingProbs,
+    confounded: bool,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> PowerArm {
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let mut trials = Vec::with_capacity(2 * n);
+        for i in 0..2 * n {
+            let injected = i < n;
+            let idx = if injected { i } else { i - n };
+            let leading = if confounded { injected } else { idx % 2 == 0 };
+            let pr = match (injected, leading) {
+                (true, true) => p.injected_leading,
+                (true, false) => p.injected_neutral,
+                (false, true) => p.noise_leading,
+                (false, false) => p.noise_neutral,
+            };
+            let said = rng.coin(pr);
+            trials.push(Trial {
+                task: "detect".into(),
+                item: format!("w{rep}-{i}"),
+                variant: "free".into(),
+                truth: if injected { "1" } else { "0" }.into(),
+                report: if said { "1" } else { "0" }.into(),
+            });
+        }
+        let d = score_detect(&trials, resamples, seed.wrapping_add(rep as u64 + 1))
+            .expect("both arms present");
+        sum += d.d_prime;
+        if d.d_prime_ci.0 > 0.0 || d.d_prime_ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    PowerArm {
+        true_d_prime: 0.0,
+        mean_d_prime: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}

@@ -230,3 +230,14 @@ says yes) has an identification accuracy of 0.7982, a margin of 0.6985 over the
 agnostic responder. Always-yes, always-no and a fair coin exceed the margin
 interval in 0.01, 0.035 and 0.015 of replicates. This is a simulation; no model
 has been queried.
+
+## Wording-confounded-design simulation
+
+`results/453-wording-confounded-design.json` simulates the detect measure at 400
+injected and 400 noise trials per arm over 200 replicates. A wording-follower
+with no internal state (yes probability 0.70 under leading wording, 0.30 under
+neutral) has a mean d' of 1.0457 when injection is paired with leading wording,
+with an interval that excludes zero in 1.0 of replicates, and a mean d' of
+-0.0079 in a wording-balanced design, excluding zero in 0.03 of replicates. The
+gap is 1.0536. A true-state responder keeps a mean d' of 1.5030 and 1.5033 in
+the two designs. This is a simulation; no model has been queried.

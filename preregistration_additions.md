@@ -333,3 +333,25 @@ or its identification accuracy is farther than 0.05 from 0.10, or any
 degenerate responder exceeds a margin interval rate of 0.10.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T22:32:35Z wording-confounded-design proposal:ab1fc8cc5db99d029dcc75bb6ed62e9cf6fea70036e35d28acb0977dd3c1c406
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a
+wording-follower with no internal state (yes probability 0.70 under leading
+wording, 0.30 under neutral wording) scored in a design that pairs injection
+with leading wording and noise with neutral wording has a mean d' of at least
+0.70 with an interval excluding zero in at least 0.95 of replicates, while the
+same responder in a wording-balanced design has a mean d' within 0.10 of 0 and
+excludes zero in at most 0.10 of replicates; a true-state responder (d' 1.5)
+keeps a mean d' of at least 1.3 in both designs.
+
+Metric: /wording_confounded_design/confounded_minus_balanced_dprime_for_follower.
+
+Expected: at least 0.70 (range 0.70 to 1.2).
+
+Falsifier: the follower's confounded-design mean d' is below 0.70, or its
+balanced-design mean d' is farther than 0.10 from 0, or its balanced-design
+exclusion rate exceeds 0.10, or the true-state responder's mean d' falls below
+1.3 in either design.
+
+This is a simulation with no model queried.

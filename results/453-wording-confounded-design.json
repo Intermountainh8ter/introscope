@@ -1,0 +1,14 @@
+{
+  "kind": "wording-confounded-design",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "wording_confounded_design": {
+    "confounded_minus_balanced_dprime_for_follower": 1.0536,
+    "follower_confounded": {"mean_d_prime": 1.0457, "excludes_zero_rate": 1.0000},
+    "follower_balanced": {"mean_d_prime": -0.0079, "excludes_zero_rate": 0.0300},
+    "true_state_confounded": {"mean_d_prime": 1.5030, "excludes_zero_rate": 1.0000},
+    "true_state_balanced": {"mean_d_prime": 1.5033, "excludes_zero_rate": 1.0000}
+  },
+  "provenance": {"started_at": "2026-11-18T22:32:46Z", "seeds": [7], "command": "target/release/introscope wording-confounded-design --out results/453-wording-confounded-design.json --seed 7 --n 400 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 13.352, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
