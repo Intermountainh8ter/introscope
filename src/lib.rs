@@ -1274,3 +1274,74 @@ pub fn simulate_wording_cell(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+/// Summary of one responder over the concept, random-direction and
+/// prompt-only arms.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ThreeArm {
+    /// Mean yes rate on the injected-concept arm.
+    pub concept_rate: f64,
+    /// Mean yes rate on the norm-matched random-direction arm.
+    pub random_rate: f64,
+    /// Mean yes rate on the prompt-only (leading wording, no injection) arm.
+    pub prompt_rate: f64,
+    /// Mean concept yes rate minus random-direction yes rate.
+    pub concept_minus_random: f64,
+    /// Mean concept yes rate minus prompt-only yes rate.
+    pub concept_minus_prompt: f64,
+    /// Fraction of replicates whose interval for concept minus random excludes zero.
+    pub random_excludes_zero_rate: f64,
+    /// Fraction of replicates whose interval for concept minus prompt-only excludes zero.
+    pub prompt_excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` trials on each of three arms for a responder
+/// with yes probabilities `p` (concept, random, prompt-only).
+pub fn simulate_three_arm(
+    p: [f64; 3],
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ThreeArm {
+    let mut rng = Rng::new(seed);
+    let (mut rates, mut gaps) = ([0.0; 3], [0.0; 2]);
+    let mut excl = [0usize; 2];
+    for rep in 0..reps {
+        let arms: Vec<Vec<bool>> = p
+            .iter()
+            .map(|&q| (0..n).map(|_| rng.coin(q)).collect())
+            .collect();
+        for (k, a) in arms.iter().enumerate() {
+            rates[k] += a.iter().filter(|&&b| b).count() as f64 / n as f64;
+        }
+        for (g, ctl) in [1usize, 2].iter().enumerate() {
+            let gap_of = |idx: &[usize]| {
+                let h = idx[..n].iter().filter(|&&i| arms[0][i % n]).count();
+                let f = idx[n..].iter().filter(|&&i| arms[*ctl][i % n]).count();
+                (h as f64 - f as f64) / n as f64
+            };
+            let all: Vec<usize> = (0..2 * n).collect();
+            gaps[g] += gap_of(&all);
+            let ci = bootstrap_ci(
+                2 * n,
+                gap_of,
+                resamples,
+                seed.wrapping_add(rep as u64 + 1 + 1000 * g as u64),
+            );
+            if ci.0 > 0.0 || ci.1 < 0.0 {
+                excl[g] += 1;
+            }
+        }
+    }
+    let r = reps as f64;
+    ThreeArm {
+        concept_rate: rates[0] / r,
+        random_rate: rates[1] / r,
+        prompt_rate: rates[2] / r,
+        concept_minus_random: gaps[0] / r,
+        concept_minus_prompt: gaps[1] / r,
+        random_excludes_zero_rate: excl[0] as f64 / r,
+        prompt_excludes_zero_rate: excl[1] as f64 / r,
+    }
+}

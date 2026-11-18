@@ -1,0 +1,16 @@
+{
+  "kind": "concept-random-prompt",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "detection": {
+    "concept_minus_random_rate": 0.5975,
+    "state_reader_random_excludes_zero_rate": 1.0000,
+    "state_reader": {"p_concept": 0.70, "p_random": 0.10, "p_prompt": 0.10, "concept_rate": 0.6975, "random_rate": 0.1001, "prompt_rate": 0.0997, "concept_minus_random": 0.5975, "concept_minus_prompt": 0.5979, "random_excludes_zero_rate": 1.0000, "prompt_excludes_zero_rate": 1.0000},
+    "wording_follower": {"p_concept": 0.60, "p_random": 0.60, "p_prompt": 0.60, "concept_rate": 0.5998, "random_rate": 0.5957, "prompt_rate": 0.6013, "concept_minus_random": 0.0041, "concept_minus_prompt": -0.0015, "random_excludes_zero_rate": 0.0650, "prompt_excludes_zero_rate": 0.0250},
+    "always_yes": {"p_concept": 1.00, "p_random": 1.00, "p_prompt": 1.00, "concept_rate": 1.0000, "random_rate": 1.0000, "prompt_rate": 1.0000, "concept_minus_random": 0.0000, "concept_minus_prompt": 0.0000, "random_excludes_zero_rate": 0.0000, "prompt_excludes_zero_rate": 0.0000},
+    "always_no": {"p_concept": 0.00, "p_random": 0.00, "p_prompt": 0.00, "concept_rate": 0.0000, "random_rate": 0.0000, "prompt_rate": 0.0000, "concept_minus_random": 0.0000, "concept_minus_prompt": 0.0000, "random_excludes_zero_rate": 0.0000, "prompt_excludes_zero_rate": 0.0000},
+    "coin": {"p_concept": 0.50, "p_random": 0.50, "p_prompt": 0.50, "concept_rate": 0.4991, "random_rate": 0.5000, "prompt_rate": 0.4975, "concept_minus_random": -0.0009, "concept_minus_prompt": 0.0015, "random_excludes_zero_rate": 0.0400, "prompt_excludes_zero_rate": 0.0500}
+  },
+  "provenance": {"started_at": "2026-11-18T21:54:31Z", "seeds": [7], "command": "target/release/introscope concept-random-prompt --seed 7 --reps 200 --out results/446-concept-random-prompt.json", "hardware": "linux x86_64", "wall_s": 32.490, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

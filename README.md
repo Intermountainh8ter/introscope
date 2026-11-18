@@ -183,3 +183,14 @@ yes on both arms has a raw spread of 0.4027, an adjusted spread of 0.0039 and an
 interval that excludes zero in at most 0.0550 of replicates at any wording.
 Always-yes and always-no have an adjusted spread of 0.0. This is a simulation; no
 model has been queried.
+
+## Concept-random-prompt simulation
+
+`results/446-concept-random-prompt.json` simulates three arms (injected concept,
+norm-matched random direction, prompt-only leading wording) at 400 trials per
+arm. A state-reading responder (yes probability 0.70, 0.10, 0.10) has a mean
+concept-minus-random yes-rate gap of 0.5975, with an interval that excludes zero
+in 1.0 of 200 replicates. A wording-follower (0.60 on every arm) has a gap of
+0.0041 and excludes zero in 0.065 of replicates. Always-yes and always-no
+exclude zero in 0.0 of replicates, and a fair coin in 0.04. This is a
+simulation; no model has been queried.

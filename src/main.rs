@@ -1,9 +1,10 @@
 use introscope::{
     iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
     simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_wording_arm,
-    simulate_wording_cell, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
-    ImpactResponder, Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_three_arm,
+    simulate_wording_arm, simulate_wording_cell, synth_trials, BaselinePredictor, ConfidenceKind,
+    ImpactControl, ImpactResponder, Responder, SelfCrossSpec, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -24,6 +25,11 @@ USAGE:
   introscope wording-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate five yes-lead wordings (0.0 to 0.4 added to every arm) and report
       raw yes-rate spread and factual-control-adjusted spread per responder.
+
+  introscope concept-random-prompt --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate three arms (injected concept, norm-matched random direction,
+      prompt-only leading wording) for a state reader, a wording-follower and
+      the degenerate responders; report concept-minus-control yes-rate gaps.
 
   introscope detect-n-sweep --out <results.json> [--seed 7] [--reps 200] [--resamples 2000]
       Simulate the detect measure at 25, 50, 100, 200 and 400 trials per arm
@@ -268,6 +274,51 @@ fn run() -> Result<(), String> {
                 resamples,
                 spreads[0].0,
                 spreads[0].1,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "concept-random-prompt" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs: [(&str, [f64; 3]); 5] = [
+                ("state_reader", [0.70, 0.10, 0.10]),
+                ("wording_follower", [0.60, 0.60, 0.60]),
+                ("always_yes", [1.0; 3]),
+                ("always_no", [0.0; 3]),
+                ("coin", [0.5; 3]),
+            ];
+            let cells: Vec<_> = specs
+                .iter()
+                .enumerate()
+                .map(|(k, (_, p))| {
+                    simulate_three_arm(*p, n, reps, resamples, seed.wrapping_add(5000 * k as u64))
+                })
+                .collect();
+            let blocks: Vec<String> = specs
+                .iter()
+                .zip(cells.iter())
+                .map(|((name, p), c)| {
+                    format!(
+                        "    \"{}\": {{\"p_concept\": {:.2}, \"p_random\": {:.2}, \"p_prompt\": {:.2}, \"concept_rate\": {:.4}, \"random_rate\": {:.4}, \"prompt_rate\": {:.4}, \"concept_minus_random\": {:.4}, \"concept_minus_prompt\": {:.4}, \"random_excludes_zero_rate\": {:.4}, \"prompt_excludes_zero_rate\": {:.4}}}",
+                        name, p[0], p[1], p[2], c.concept_rate, c.random_rate, c.prompt_rate,
+                        c.concept_minus_random, c.concept_minus_prompt,
+                        c.random_excludes_zero_rate, c.prompt_excludes_zero_rate
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"concept-random-prompt\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"detection\": {{\n    \"concept_minus_random_rate\": {:.4},\n    \"state_reader_random_excludes_zero_rate\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                cells[0].concept_minus_random,
+                cells[0].random_excludes_zero_rate,
                 blocks.join(",\n"),
                 provenance(
                     started,

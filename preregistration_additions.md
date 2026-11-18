@@ -244,3 +244,23 @@ responder's adjusted-gap interval excluding zero in more than 0.10 of
 replicates at any wording.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T21:54:22Z concept-random-prompt proposal:4f246af61f4ca327f6d48765dde748736e1788b57427abfd264363cfa8d1282a
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a state-reading
+responder (yes probability 0.70 under the concept arm, 0.10 under the matched
+random arm, 0.10 under the prompt-only arm) has a concept-minus-random yes-rate
+gap of at least 0.50 with an interval excluding zero in at least 0.95 of
+replicates, while a wording-follower (yes probability 0.60 on every arm) has
+concept-minus-random and concept-minus-prompt-only gap intervals including zero
+in at least 0.90 of replicates; always-yes, always-no and a fair coin show a
+concept-minus-random gap interval excluding zero in at most 0.10 of replicates.
+
+Metric: /detection/concept_minus_random_rate.
+
+Expected: at least 0.50 (range 0.50 to 0.70).
+
+Falsifier: the state reader's mean gap is below 0.50, or any degenerate
+responder has a gap interval excluding zero in more than 0.10 of replicates.
+
+This is a simulation with no model queried.
