@@ -323,3 +323,15 @@ input-only classifier is 0.0 and its interval excludes zero in 0.0 of
 replicates; at share 0.05 the rate is 0.76. Always-yes, always-no and a fair
 coin exclude zero upward in 0.0 of replicates at every share. This is a
 simulation; no model has been queried.
+
+## Answer-position-artifact simulation
+
+`results/469-answer-position-artifact.json` simulates a responder with no state
+signal that picks option A with probability 0.65, scored on a neutral and a
+threat condition of 400 items each. With the correct answer fixed at A in the
+neutral condition and at B in the threat condition, it shows a spurious
+accuracy drop of 0.2965 with an interval that excludes zero in 1.0 of 200
+replicates. Under counterbalanced order the drop is 0.0037 and the interval
+excludes zero in 0.05 of replicates. A fair coin shows a drop of -0.0003 under
+fixed order and -0.0019 under counterbalanced order. This is a simulation; no
+model has been queried.

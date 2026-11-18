@@ -1977,3 +1977,53 @@ pub fn simulate_share_cell(
         coin_up_rate: up[4] as f64 / r,
     }
 }
+
+/// One responder under one answer-order design in the answer-position artifact.
+pub struct PositionArm {
+    pub spurious_effect: f64,
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate a responder with no state signal that picks option A with
+/// probability `p_a`, scored on a neutral and a threat condition of `n` items.
+/// Under fixed order the correct answer is A in the neutral condition and B in
+/// the threat condition; under counterbalanced order half of the items in each
+/// condition have each answer as correct. The effect is neutral accuracy minus
+/// threat accuracy, which is spurious because the responder never sees the state.
+pub fn simulate_position_artifact(
+    p_a: f64,
+    counterbalanced: bool,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> PositionArm {
+    let mut rng = Rng::new(seed);
+    let mut sum = 0.0;
+    let mut excl = 0usize;
+    for rep in 0..reps {
+        let mut neutral = vec![0.0f64; n];
+        let mut threat = vec![0.0f64; n];
+        for i in 0..n {
+            let (a_neutral, a_threat) = if counterbalanced {
+                (i % 2 == 0, i % 2 == 0)
+            } else {
+                (true, false)
+            };
+            neutral[i] = (rng.coin(p_a) == a_neutral) as u8 as f64;
+            threat[i] = (rng.coin(p_a) == a_threat) as u8 as f64;
+        }
+        let drop = |idx: &[usize]| {
+            idx.iter().map(|&i| neutral[i] - threat[i]).sum::<f64>() / idx.len() as f64
+        };
+        sum += neutral.iter().sum::<f64>() / n as f64 - threat.iter().sum::<f64>() / n as f64;
+        let ci = bootstrap_ci(n, drop, resamples, seed.wrapping_add(rep as u64 + 1));
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    PositionArm {
+        spurious_effect: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}

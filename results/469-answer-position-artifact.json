@@ -1,0 +1,22 @@
+{
+  "kind": "answer-position-artifact",
+  "n_items": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "p_answer_a": 0.65,
+  "arms": {
+    "fixed_order": {
+      "spurious_effect": 0.2965,
+      "excludes_zero_rate": 1.0000,
+      "coin_effect": -0.0003,
+      "coin_excludes_zero_rate": 0.0400
+    },
+    "counterbalanced": {
+      "spurious_effect": 0.0037,
+      "excludes_zero_rate": 0.0500,
+      "coin_effect": -0.0019,
+      "coin_excludes_zero_rate": 0.0500
+    }
+  },
+  "provenance": {"started_at": "2026-11-18T23:43:53Z", "seeds": [7], "command": "target/release/introscope answer-position-artifact --seed 7 --reps 200 --out results/469-answer-position-artifact.json", "hardware": "linux x86_64", "wall_s": 5.275, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

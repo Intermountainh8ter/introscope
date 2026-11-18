@@ -3,12 +3,12 @@ use introscope::{
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
     simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
-    simulate_layer_selection, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_three_arm,
-    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
-    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder, Naming,
-    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_layer_selection, simulate_position_artifact, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
+    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
+    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder,
+    Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
+    CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -45,6 +45,10 @@ USAGE:
       Simulate a self-predictor that uses a privileged signal on a share of
       items against an input-only classifier and a cross-predictor; report the
       smallest share whose advantage interval excludes zero in 0.80 of replicates.
+
+  introscope answer-position-artifact --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate an answer-A-biased responder with no state signal on a neutral
+      and a threat condition under fixed and counterbalanced answer order.
 
   introscope resample-cluster --out <results.json> [--seed 7] [--items 100] [--k 4] [--reps 200] [--resamples 2000]
       Simulate a null responder with a fixed per-item yes bias and a true
@@ -511,6 +515,46 @@ fn run() -> Result<(), String> {
                 resamples,
                 min_share,
                 blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "answer-position-artifact" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs = [("fixed_order", false), ("counterbalanced", true)];
+            let resp = [("biased_a", 0.65), ("coin", 0.5)];
+            let mut arms = Vec::new();
+            for (k, (name, cb)) in specs.iter().enumerate() {
+                let mut inner = Vec::new();
+                for (j, (rn, pa)) in resp.iter().enumerate() {
+                    let c = simulate_position_artifact(
+                        *pa,
+                        *cb,
+                        n,
+                        reps,
+                        resamples,
+                        seed.wrapping_add(9000 * (2 * k + j) as u64),
+                    );
+                    inner.push((*rn, c));
+                }
+                let b = &inner[0].1;
+                let coin = &inner[1].1;
+                arms.push(format!(
+                    "    \"{}\": {{\n      \"spurious_effect\": {:.4},\n      \"excludes_zero_rate\": {:.4},\n      \"coin_effect\": {:.4},\n      \"coin_excludes_zero_rate\": {:.4}\n    }}",
+                    name, b.spurious_effect, b.excludes_zero_rate, coin.spurious_effect, coin.excludes_zero_rate
+                ));
+            }
+            format!(
+                "  \"kind\": \"answer-position-artifact\",\n  \"n_items\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"p_answer_a\": 0.65,\n  \"arms\": {{\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                arms.join(",\n"),
                 provenance(
                     started,
                     seed,

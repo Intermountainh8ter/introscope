@@ -516,3 +516,24 @@ advantage at s=0 has absolute value of 0.03 or more, or any degenerate
 responder exceeds an interval rate of 0.10 at any share.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:43:05Z answer-position-artifact proposal:aa9beb286d37957fe35a81a919364e3b35ae6573b57bcfc96ef9bf050425a79c
+
+Hypothesis: with seed 7, 400 items per condition and 200 replicates, a
+responder that picks option A with probability 0.65 and has no signal shows a
+spurious accuracy drop between a neutral and a threat condition of 0.25 to 0.35
+with a bootstrap interval excluding zero in at least 0.90 of replicates when
+the correct answer is fixed at A in the neutral condition and at B in the
+threat condition, while under counterbalanced order the drop has absolute value
+below 0.03 and an interval excluding zero in at most 0.10 of replicates; a fair
+coin shows no drop under either order.
+
+Metric: /arms/fixed_order/spurious_effect.
+
+Expected: between 0.25 and 0.35.
+
+Falsifier: the fixed-order spurious effect falls outside 0.25 to 0.35, or the
+counterbalanced drop has absolute value of 0.03 or more, or the coin shows an
+interval-excludes-zero rate above 0.10 under either order.
+
+This is a simulation with no model queried.
