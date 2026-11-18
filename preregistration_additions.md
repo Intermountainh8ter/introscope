@@ -437,3 +437,22 @@ pre-specified-layer d' is farther than 0.05 from 0, or the true introspector's
 best-layer d' is below 0.8.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:17:11Z stack-drift proposal:2dc92a84f1b7d6bb8e49527a53626ca0ebd194d32b77b18ef04444603c157a11
+
+Hypothesis: with seed 7, 400 signal and 400 noise trials per arm, 200
+replicates and five stacks whose criterion shifts span -0.6 to +0.6, a detector
+with true d' 1.0 has a range of mean hit-minus-false-alarm gap across stacks of
+at least 0.08 while its range of mean d' across stacks is below 0.05, and a
+null random-direction responder keeps a mean d' within 0.05 of 0 under every
+stack.
+
+Metric: /detector/gap_range_across_stacks.
+
+Expected: increases to at least 0.08 (d' range stays below 0.05).
+
+Falsifier: the detector's range of mean gap across stacks is below 0.08, or its
+range of mean d' across stacks is 0.05 or more, or the null responder's mean d'
+is farther than 0.05 from 0 under any stack.
+
+This is a simulation with no model queried.

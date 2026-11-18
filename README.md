@@ -281,3 +281,13 @@ probability 0.5 on both arms) has a mean best-of-24-layers d' of 0.3433 and a
 mean d' of 0.0062 at the pre-specified layer. A true introspector (d' 1.0 at
 one layer only) has a best-layer d' of 1.0087. This is a simulation; no model
 has been queried.
+
+## Stack-drift simulation
+
+`results/463-stack-drift.json` simulates a detector with true d' of 1.0 under
+five serving stacks whose Yes criterion shifts from -0.6 to 0.6, at 400 trials
+per arm and 200 replicates. The range of mean d' across stacks is 0.0056, so
+d' is stable. The range of mean hit-minus-false-alarm gap is 0.0595, below the
+pre-registered threshold of 0.08, so the hypothesis is falsified. A null
+random-direction responder has a largest absolute mean d' of 0.0061. This is a
+simulation; no model has been queried.

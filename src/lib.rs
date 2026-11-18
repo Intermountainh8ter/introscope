@@ -1668,3 +1668,32 @@ pub fn simulate_layer_selection(
         pre_specified_mean: pre_sum / r,
     }
 }
+
+/// Mean d' and mean hit-minus-false-alarm gap of a detector under one
+/// serving stack that shifts the Yes criterion.
+#[derive(Debug, Clone)]
+pub struct StackCell {
+    pub dprime_mean: f64,
+    pub gap_mean: f64,
+}
+
+/// Simulate `reps` detect tables of `n` signal and `n` noise trials for a
+/// detector with true d' `d` whose Yes criterion is shifted by `shift`
+/// (positive shift lowers the Yes rate on both arms).
+pub fn simulate_stack_drift(d: f64, shift: f64, n: usize, reps: usize, seed: u64) -> StackCell {
+    let mut rng = Rng::new(seed);
+    let hit_p = norm_cdf(d / 2.0 - shift);
+    let fa_p = norm_cdf(-d / 2.0 - shift);
+    let (mut d_sum, mut g_sum) = (0.0, 0.0);
+    for _ in 0..reps {
+        let hits = (0..n).filter(|_| rng.coin(hit_p)).count();
+        let fas = (0..n).filter(|_| rng.coin(fa_p)).count();
+        d_sum += d_prime(hits, n, fas, n);
+        g_sum += (hits as f64 - fas as f64) / n as f64;
+    }
+    let r = reps as f64;
+    StackCell {
+        dprime_mean: d_sum / r,
+        gap_mean: g_sum / r,
+    }
+}

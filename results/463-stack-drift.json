@@ -1,0 +1,16 @@
+{
+  "kind": "stack-drift",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "detector": {"true_dprime": 1.0, "gap_range_across_stacks": 0.0595, "dprime_range_across_stacks": 0.0056},
+  "null": {"max_abs_dprime_mean": 0.0061},
+  "stacks": [
+    {"criterion_shift": -0.6, "detector_dprime_mean": 1.0017, "detector_gap_mean": 0.3253, "null_dprime_mean": 0.0037},
+    {"criterion_shift": -0.3, "detector_dprime_mean": 0.9960, "detector_gap_mean": 0.3670, "null_dprime_mean": -0.0039},
+    {"criterion_shift": 0.0, "detector_dprime_mean": 0.9996, "detector_gap_mean": 0.3829, "null_dprime_mean": -0.0006},
+    {"criterion_shift": 0.3, "detector_dprime_mean": 0.9969, "detector_gap_mean": 0.3668, "null_dprime_mean": 0.0009},
+    {"criterion_shift": 0.6, "detector_dprime_mean": 0.9975, "detector_gap_mean": 0.3233, "null_dprime_mean": -0.0061}
+  ],
+  "provenance": {"started_at": "2026-11-18T23:17:36Z", "seeds": [7], "command": "target/release/introscope stack-drift --out results/463-stack-drift.json --seed 7 --n 400 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 0.013, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

@@ -3,10 +3,10 @@ use introscope::{
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
     simulate_input_only_baseline, simulate_layer_selection, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs,
-    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_selfpred_power, simulate_sham_power, simulate_stack_drift, simulate_three_arm,
+    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
+    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder,
+    SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -32,6 +32,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope stack-drift --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a detector and a null random-direction responder under five
+      serving stacks that shift the Yes criterion; report how far mean d' and
+      the hit-minus-false-alarm gap move across stacks.
 
   introscope layer-selection --out <results.json> [--seed 7] [--layers 24] [--n 100] [--reps 200]
       Simulate a null responder and a one-layer introspector scored at the best
@@ -396,6 +401,61 @@ fn run() -> Result<(), String> {
                 k,
                 res[1].margin,
                 blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "stack-drift" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let shifts = [-0.6, -0.3, 0.0, 0.3, 0.6];
+            let run = |d: f64, off: u64| -> Vec<introscope::StackCell> {
+                shifts
+                    .iter()
+                    .enumerate()
+                    .map(|(k, s)| {
+                        simulate_stack_drift(
+                            d,
+                            *s,
+                            n,
+                            reps,
+                            seed.wrapping_add(off + 1000 * k as u64),
+                        )
+                    })
+                    .collect()
+            };
+            let det = run(1.0, 0);
+            let nul = run(0.0, 50000);
+            let range = |v: Vec<f64>| {
+                v.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+                    - v.iter().cloned().fold(f64::INFINITY, f64::min)
+            };
+            let gap_range = range(det.iter().map(|c| c.gap_mean).collect());
+            let d_range = range(det.iter().map(|c| c.dprime_mean).collect());
+            let null_max = nul.iter().map(|c| c.dprime_mean.abs()).fold(0.0, f64::max);
+            let stacks: Vec<String> = shifts
+                .iter()
+                .zip(det.iter().zip(nul.iter()))
+                .map(|(s, (d, z))| {
+                    format!(
+                        "    {{\"criterion_shift\": {:.1}, \"detector_dprime_mean\": {:.4}, \"detector_gap_mean\": {:.4}, \"null_dprime_mean\": {:.4}}}",
+                        s, d.dprime_mean, d.gap_mean, z.dprime_mean
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"stack-drift\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"detector\": {{\"true_dprime\": 1.0, \"gap_range_across_stacks\": {:.4}, \"dprime_range_across_stacks\": {:.4}}},\n  \"null\": {{\"max_abs_dprime_mean\": {:.4}}},\n  \"stacks\": [\n{}\n  ],\n{}",
+                n,
+                reps,
+                resamples,
+                gap_range,
+                d_range,
+                null_max,
+                stacks.join(",\n"),
                 provenance(
                     started,
                     seed,
