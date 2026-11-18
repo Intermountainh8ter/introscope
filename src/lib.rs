@@ -1541,3 +1541,55 @@ pub fn dose_gated_d_prime(dose: f64, threshold: f64, strong: f64) -> f64 {
         0.0
     }
 }
+
+/// Pass rates of the raw and control-corrected detection gap for one responder
+/// at one steering dose.
+#[derive(Debug, Clone)]
+pub struct ControlArm {
+    pub raw_pass_rate: f64,
+    pub corrected_pass_rate: f64,
+    pub mean_raw_gap: f64,
+    pub mean_corrected_gap: f64,
+}
+
+/// Simulate steering that lifts the generic Yes rate by `bias` on both the
+/// introspection question and matched control questions, plus `detect` on the
+/// introspection question only. The raw gap is the introspection yes rate
+/// (injected minus noise); the corrected gap subtracts the same difference
+/// measured on the control questions. A gap passes when it exceeds `threshold`.
+pub fn simulate_control_question(
+    base: f64,
+    bias: f64,
+    detect: f64,
+    threshold: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> ControlArm {
+    let mut rng = Rng::new(seed);
+    let rate = |rng: &mut Rng, p: f64| (0..n).filter(|_| rng.coin(p)).count() as f64 / n as f64;
+    let (mut raw_pass, mut cor_pass, mut raw_sum, mut cor_sum) = (0usize, 0usize, 0.0, 0.0);
+    for _ in 0..reps {
+        let intro_inj = rate(&mut rng, (base + bias + detect).min(1.0));
+        let intro_noise = rate(&mut rng, base);
+        let ctrl_inj = rate(&mut rng, (base + bias).min(1.0));
+        let ctrl_noise = rate(&mut rng, base);
+        let raw = intro_inj - intro_noise;
+        let corrected = raw - (ctrl_inj - ctrl_noise);
+        raw_sum += raw;
+        cor_sum += corrected;
+        if raw > threshold {
+            raw_pass += 1;
+        }
+        if corrected > threshold {
+            cor_pass += 1;
+        }
+    }
+    let r = reps as f64;
+    ControlArm {
+        raw_pass_rate: raw_pass as f64 / r,
+        corrected_pass_rate: cor_pass as f64 / r,
+        mean_raw_gap: raw_sum / r,
+        mean_corrected_gap: cor_sum / r,
+    }
+}

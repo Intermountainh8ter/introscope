@@ -1,0 +1,15 @@
+{
+  "kind": "control-question",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "control_question": {
+    "top_dose": 2.0,
+    "pass_threshold": 0.10,
+    "false_pass_rate_raw_minus_corrected": 0.9900,
+    "dose_0.5": {"yes_bias": 0.05, "pure_bias_raw_pass_rate": 0.0650, "pure_bias_corrected_pass_rate": 0.0150, "pure_bias_mean_raw_gap": 0.0498, "pure_bias_mean_corrected_gap": 0.0010, "true_detection_raw_pass_rate": 0.5350, "true_detection_corrected_pass_rate": 0.1450, "true_detection_mean_corrected_gap": 0.0513, "false_pass_rate_raw_minus_corrected": 0.0500},
+    "dose_1.0": {"yes_bias": 0.10, "pure_bias_raw_pass_rate": 0.5100, "pure_bias_corrected_pass_rate": 0.0200, "pure_bias_mean_raw_gap": 0.0972, "pure_bias_mean_corrected_gap": -0.0004, "true_detection_raw_pass_rate": 1.0000, "true_detection_corrected_pass_rate": 0.5450, "true_detection_mean_corrected_gap": 0.1011, "false_pass_rate_raw_minus_corrected": 0.4900},
+    "dose_2.0": {"yes_bias": 0.20, "pure_bias_raw_pass_rate": 1.0000, "pure_bias_corrected_pass_rate": 0.0100, "pure_bias_mean_raw_gap": 0.2009, "pure_bias_mean_corrected_gap": -0.0022, "true_detection_raw_pass_rate": 1.0000, "true_detection_corrected_pass_rate": 0.9800, "true_detection_mean_corrected_gap": 0.1965, "false_pass_rate_raw_minus_corrected": 0.9900}
+  },
+  "provenance": {"started_at": "2026-11-18T23:01:30Z", "seeds": [7], "command": "target/release/introscope control-question --out results/460-control-question.json --seed 7 --n 400 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 0.015, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

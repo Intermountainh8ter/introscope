@@ -376,3 +376,25 @@ farther than 0.10 from 0 at any dose or excludes zero in more than 0.10 of
 replicates, or the always-yes responder's mean d' is not 0.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:00:56Z control-question proposal:72a170312c46fa5dfad776c28143bd61856ad62edd077a945a7e6ec4b2b3c1ee
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a pure
+Yes-bias responder (steering lifts the yes probability equally on the
+introspection question and on matched non-introspective control questions, no
+detection channel) has a raw detection gap that passes a fixed threshold of
+0.10 in at least 0.9 of replicates at the top dose but a control-corrected gap
+that passes it in at most 0.10 of replicates, while a true-detection responder
+passes the corrected threshold in at least 0.9 of replicates, so the false-pass
+rate of the raw score minus that of the corrected score is at least 0.8 for the
+pure-bias responder.
+
+Metric: /control_question/false_pass_rate_raw_minus_corrected.
+
+Expected: at least 0.80 (range 0.80 to 1.0).
+
+Falsifier: the pure Yes-bias responder's raw pass rate is below 0.9 or its
+corrected pass rate is above 0.10, or the true-detection responder's corrected
+pass rate is below 0.9, or the difference is below 0.80.
+
+This is a simulation with no model queried.

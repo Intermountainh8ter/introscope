@@ -1,11 +1,11 @@
 use introscope::{
     dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
-    simulate_confidence_channel, simulate_detect_identify, simulate_detect_power,
-    simulate_impact_matched, simulate_input_only_baseline, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs,
-    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_confidence_channel, simulate_control_question, simulate_detect_identify,
+    simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_three_arm,
+    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
+    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder,
+    SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -31,6 +31,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope control-question --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate steering that lifts the Yes rate on both the introspection
+      question and control questions; compare raw and control-corrected
+      detection pass rates for a pure Yes-bias and a true-detection responder.
 
   introscope dose-gate --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a dose-gated responder, a matched-random-direction responder and
@@ -384,6 +389,53 @@ fn run() -> Result<(), String> {
                 resamples,
                 k,
                 res[1].margin,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "control-question" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let (base, threshold) = (0.3_f64, 0.10_f64);
+            let doses = [0.5_f64, 1.0, 2.0];
+            let mut blocks = Vec::new();
+            let mut headline = 0.0;
+            for (k, dose) in doses.iter().enumerate() {
+                let s = seed.wrapping_add(10000 * k as u64);
+                let bias = 0.1 * dose;
+                let pure = simulate_control_question(base, bias, 0.0, threshold, n, reps, s);
+                let truth = simulate_control_question(
+                    base,
+                    bias,
+                    bias,
+                    threshold,
+                    n,
+                    reps,
+                    s.wrapping_add(5000),
+                );
+                let diff = pure.raw_pass_rate - pure.corrected_pass_rate;
+                if k == doses.len() - 1 {
+                    headline = diff;
+                }
+                blocks.push(format!(
+                    "    \"dose_{:.1}\": {{\"yes_bias\": {:.2}, \"pure_bias_raw_pass_rate\": {:.4}, \"pure_bias_corrected_pass_rate\": {:.4}, \"pure_bias_mean_raw_gap\": {:.4}, \"pure_bias_mean_corrected_gap\": {:.4}, \"true_detection_raw_pass_rate\": {:.4}, \"true_detection_corrected_pass_rate\": {:.4}, \"true_detection_mean_corrected_gap\": {:.4}, \"false_pass_rate_raw_minus_corrected\": {:.4}}}",
+                    dose, bias, pure.raw_pass_rate, pure.corrected_pass_rate, pure.mean_raw_gap,
+                    pure.mean_corrected_gap, truth.raw_pass_rate, truth.corrected_pass_rate,
+                    truth.mean_corrected_gap, diff
+                ));
+            }
+            format!(
+                "  \"kind\": \"control-question\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"control_question\": {{\n    \"top_dose\": 2.0,\n    \"pass_threshold\": {:.2},\n    \"false_pass_rate_raw_minus_corrected\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                threshold,
+                headline,
                 blocks.join(",\n"),
                 provenance(
                     started,

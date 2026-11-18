@@ -251,3 +251,15 @@ threshold it is 1.5024. The matched-random-direction responder has a mean d' of
 0.0003 at the threshold dose and excludes zero in 0.07 of replicates, and the
 always-yes responder has a mean d' of 0.0 at every dose. This is a simulation;
 no model has been queried.
+
+## Control-question simulation
+
+`results/460-control-question.json` simulates steering that lifts the Yes rate
+on both the introspection question and matched control questions, at 400
+trials per arm and 200 replicates, with a pass threshold of 0.10. At the top
+dose a pure Yes-bias responder has a mean raw gap of 0.2009 and passes the raw
+score in 1.0 of replicates, but its control-corrected gap has a mean of -0.0022
+and passes in 0.0100 of replicates. A true-detection responder passes the
+corrected score in 0.9800 of replicates. The raw-minus-corrected false-pass
+rate is 0.9900. At the lowest dose the same difference is 0.0500. This is a
+simulation; no model has been queried.
