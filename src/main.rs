@@ -64,6 +64,10 @@ USAGE:
       Score AUROC of attached confidence for injected versus sham trials for
       always-yes responders with graded, constant and noise confidence,
       alongside the yes/no sham-adjusted gap.
+  introscope selfcross-share-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate the disagreement-subset selfpred test at disagreement shares
+      0.05 to 0.50 for a privileged-self and a general-capability responder
+      and report the smallest share with power of at least 0.80.
   introscope sham-power --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a sham-controlled detect score (hit rate minus sham
       false-alarm rate) for an injected-concept responder (true d' 1.5), a
@@ -408,6 +412,58 @@ fn run() -> Result<(), String> {
                 arm(&own),
                 arm(&gen),
                 arm(&con),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "selfcross-share-sweep" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let mut rows = Vec::new();
+            let mut min_share: Option<f64> = None;
+            for k in 1..=10u64 {
+                let share = k as f64 * 0.05;
+                let spec = |a, b, c, d| SelfCrossSpec {
+                    self_disagree: a,
+                    cross_disagree: b,
+                    self_consensus: c,
+                    cross_consensus: d,
+                };
+                let own = simulate_selfcross_power(
+                    spec(0.8, 0.5, 0.9, 0.9),
+                    share,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(k * 100),
+                );
+                let gen = simulate_selfcross_power(
+                    spec(0.7, 0.7, 0.7, 0.7),
+                    share,
+                    n,
+                    reps,
+                    resamples,
+                    seed.wrapping_add(5000 + k * 100),
+                );
+                if min_share.is_none() && own.subset_excludes_zero_rate >= 0.80 {
+                    min_share = Some(share);
+                }
+                rows.push(format!(
+                    "    {{\"disagree_share\": {:.2}, \"privileged_subset_advantage\": {:.4}, \"privileged_excludes_zero_rate\": {:.4}, \"general_subset_advantage\": {:.4}, \"general_excludes_zero_rate\": {:.4}}}",
+                    share, own.subset_advantage, own.subset_excludes_zero_rate, gen.subset_advantage, gen.subset_excludes_zero_rate
+                ));
+            }
+            format!(
+                "  \"kind\": \"selfcross-share-sweep\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"sweep\": {{\n    \"min_share_for_power_0_80\": {},\n    \"cells\": [\n{}\n    ]\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                min_share.map_or("null".to_string(), |x| format!("{x:.2}")),
+                rows.join(",\n"),
                 provenance(
                     started,
                     seed,

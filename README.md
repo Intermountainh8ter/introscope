@@ -194,3 +194,14 @@ in 1.0 of 200 replicates. A wording-follower (0.60 on every arm) has a gap of
 0.0041 and excludes zero in 0.065 of replicates. Always-yes and always-no
 exclude zero in 0.0 of replicates, and a fair coin in 0.04. This is a
 simulation; no model has been queried.
+
+## Selfcross share sweep simulation
+
+`results/447-selfcross-share-sweep.json` sweeps the disagreement-item share from
+0.05 to 0.50 at 400 self and 400 cross items per arm. The disagreement-subset
+test of a privileged-self responder first reaches power 0.80 at a share of
+0.10, where its interval excludes zero in 0.815 of 200 replicates; at a share
+of 0.05 it excludes zero in 0.565 of replicates, so the "every share" clause
+of the hypothesis is refuted. A general-capability responder excludes zero in
+at most 0.07 of replicates in every cell. This is a simulation; no model has
+been queried.

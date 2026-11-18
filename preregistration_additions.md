@@ -264,3 +264,25 @@ Falsifier: the state reader's mean gap is below 0.50, or any degenerate
 responder has a gap interval excluding zero in more than 0.10 of replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T21:59:49Z selfcross-share-sweep proposal:9b8a720ecd875fcbd35fffeef68834bc427bce76f1d278b0560181275b061abe
+
+Hypothesis: with seed 7, 400 self and 400 cross items per arm and 200
+replicates, a privileged-self responder (0.80 versus 0.50 on disagreement
+items, 0.90 on consensus items) has a disagreement-subset interval excluding
+zero in at least 0.80 of replicates at every disagreement share from 0.05 to
+0.50 in steps of 0.05, while a general-capability responder (0.70 everywhere)
+excludes zero in at most 0.08 of replicates at every share.
+
+Metric: /sweep/min_share_for_power_0_80 (smallest share in the grid at which
+the privileged-self power is at least 0.80).
+
+Expected: at most 0.10 (range 0.05 to 0.10); general-capability
+excludes-zero rate at or below 0.08 in every cell.
+
+Falsifier: privileged-self power below 0.80 at a share of 0.10 or above, or a
+general-capability responder excluding zero in more than 0.08 of replicates in
+any cell. A power below 0.80 at 0.05 alone does not refute the metric
+expectation but does refute the "every share" clause and is reported as such.
+
+This is a simulation with no model queried.

@@ -1,0 +1,22 @@
+{
+  "kind": "selfcross-share-sweep",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "sweep": {
+    "min_share_for_power_0_80": 0.10,
+    "cells": [
+    {"disagree_share": 0.05, "privileged_subset_advantage": 0.3147, "privileged_excludes_zero_rate": 0.5650, "general_subset_advantage": 0.0098, "general_excludes_zero_rate": 0.0250},
+    {"disagree_share": 0.10, "privileged_subset_advantage": 0.2955, "privileged_excludes_zero_rate": 0.8150, "general_subset_advantage": -0.0077, "general_excludes_zero_rate": 0.0700},
+    {"disagree_share": 0.15, "privileged_subset_advantage": 0.3004, "privileged_excludes_zero_rate": 0.9400, "general_subset_advantage": 0.0045, "general_excludes_zero_rate": 0.0400},
+    {"disagree_share": 0.20, "privileged_subset_advantage": 0.3012, "privileged_excludes_zero_rate": 0.9800, "general_subset_advantage": -0.0053, "general_excludes_zero_rate": 0.0400},
+    {"disagree_share": 0.25, "privileged_subset_advantage": 0.3042, "privileged_excludes_zero_rate": 0.9950, "general_subset_advantage": 0.0004, "general_excludes_zero_rate": 0.0250},
+    {"disagree_share": 0.30, "privileged_subset_advantage": 0.2965, "privileged_excludes_zero_rate": 1.0000, "general_subset_advantage": -0.0058, "general_excludes_zero_rate": 0.0600},
+    {"disagree_share": 0.35, "privileged_subset_advantage": 0.3067, "privileged_excludes_zero_rate": 1.0000, "general_subset_advantage": -0.0073, "general_excludes_zero_rate": 0.0450},
+    {"disagree_share": 0.40, "privileged_subset_advantage": 0.2971, "privileged_excludes_zero_rate": 1.0000, "general_subset_advantage": 0.0025, "general_excludes_zero_rate": 0.0500},
+    {"disagree_share": 0.45, "privileged_subset_advantage": 0.2976, "privileged_excludes_zero_rate": 1.0000, "general_subset_advantage": -0.0001, "general_excludes_zero_rate": 0.0500},
+    {"disagree_share": 0.50, "privileged_subset_advantage": 0.2993, "privileged_excludes_zero_rate": 1.0000, "general_subset_advantage": -0.0024, "general_excludes_zero_rate": 0.0400}
+    ]
+  },
+  "provenance": {"started_at": "2026-11-18T21:59:57Z", "seeds": [7], "command": "target/release/introscope selfcross-share-sweep --seed 7 --reps 200 --out results/447-selfcross-share-sweep.json", "hardware": "linux x86_64", "wall_s": 81.062, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
