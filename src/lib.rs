@@ -1791,3 +1791,110 @@ pub fn simulate_item_cluster(
         clustered_excludes_zero_rate: clust_excl as f64 / r,
     }
 }
+
+/// Responder in the identify-versus-frequency-prior simulation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PriorResponder {
+    /// Always says yes and names the top-ranked word.
+    Guesser,
+    /// Says yes and names the injected concept with this probability, else draws from the prior.
+    Aware(f64),
+    AlwaysYes,
+    AlwaysNo,
+    Coin,
+}
+
+/// Summary of one responder at one vocabulary size.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PriorCell {
+    /// Mean fraction of injected trials with a yes and the right name.
+    pub accuracy: f64,
+    /// Mean accuracy minus the guesser's accuracy on the same trials.
+    pub advantage: f64,
+    /// Fraction of replicates whose advantage interval lies above zero.
+    pub advantage_up_rate: f64,
+}
+
+/// Harmonic number of order 1 for `v` words (Zipf exponent 1 normaliser).
+pub fn harmonic(v: usize) -> f64 {
+    (1..=v).map(|i| 1.0 / i as f64).sum()
+}
+
+fn zipf_draw(cdf: &[f64], rng: &mut Rng) -> usize {
+    let u = rng.unit();
+    cdf.partition_point(|&c| c <= u).min(cdf.len() - 1)
+}
+
+/// Simulate `reps` tables of `n` injected trials whose concept is drawn from a
+/// Zipf(1) prior over `v` words. Each responder is scored on identification
+/// accuracy (yes and the right name); the first responder is the reference
+/// for the advantage. All responders see the same concepts in a replicate.
+pub fn simulate_identify_prior(
+    responders: &[PriorResponder],
+    v: usize,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> Vec<PriorCell> {
+    let h = harmonic(v);
+    let mut cdf = Vec::with_capacity(v);
+    let mut run = 0.0;
+    for i in 1..=v {
+        run += 1.0 / (i as f64 * h);
+        cdf.push(run);
+    }
+    let m = responders.len();
+    let mut rng = Rng::new(seed);
+    let mut sums = vec![[0.0f64; 2]; m];
+    let mut up = vec![0usize; m];
+    for rep in 0..reps {
+        let truth: Vec<usize> = (0..n).map(|_| zipf_draw(&cdf, &mut rng)).collect();
+        let hits: Vec<Vec<f64>> = responders
+            .iter()
+            .map(|&r| {
+                truth
+                    .iter()
+                    .map(|&t| {
+                        let ok = match r {
+                            PriorResponder::Guesser => t == 0,
+                            PriorResponder::Aware(q) => {
+                                rng.coin(q) || zipf_draw(&cdf, &mut rng) == t
+                            }
+                            PriorResponder::AlwaysYes => zipf_draw(&cdf, &mut rng) == t,
+                            PriorResponder::AlwaysNo => false,
+                            PriorResponder::Coin => rng.coin(0.5) && zipf_draw(&cdf, &mut rng) == t,
+                        };
+                        ok as u8 as f64
+                    })
+                    .collect()
+            })
+            .collect();
+        for j in 0..m {
+            let acc = hits[j].iter().sum::<f64>() / n as f64;
+            let base = hits[0].iter().sum::<f64>() / n as f64;
+            sums[j][0] += acc;
+            sums[j][1] += acc - base;
+            let diff = |idx: &[usize]| {
+                idx.iter().map(|&i| hits[j][i] - hits[0][i]).sum::<f64>() / idx.len() as f64
+            };
+            let ci = bootstrap_ci(
+                n,
+                diff,
+                resamples,
+                seed.wrapping_add(rep as u64 + 1 + 1000 * j as u64),
+            );
+            if ci.0 > 0.0 {
+                up[j] += 1;
+            }
+        }
+    }
+    let r = reps as f64;
+    (0..m)
+        .map(|j| PriorCell {
+            accuracy: sums[j][0] / r,
+            advantage: sums[j][1] / r,
+            advantage_up_rate: up[j] as f64 / r,
+        })
+        .collect()
+}

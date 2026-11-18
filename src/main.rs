@@ -1,13 +1,13 @@
 use introscope::{
-    dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
+    dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
-    simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
-    simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_stack_drift,
-    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
-    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder,
-    Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
+    simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
+    simulate_layer_selection, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_stack_drift, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder, Naming, PriorResponder,
+    Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -39,6 +39,7 @@ USAGE:
       serving stacks that shift the Yes criterion; report how far mean d' and
       the hit-minus-false-alarm gap move across stacks.
 
+  introscope identify-frequency-prior --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
   introscope resample-cluster --out <results.json> [--seed 7] [--items 100] [--k 4] [--reps 200] [--resamples 2000]
       Simulate a null responder with a fixed per-item yes bias and a true
       detector, each item sampled k times; compare a trial-level interval with
@@ -406,6 +407,55 @@ fn run() -> Result<(), String> {
                 resamples,
                 k,
                 res[1].margin,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "identify-frequency-prior" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs = [
+                ("guesser", PriorResponder::Guesser),
+                ("content_aware", PriorResponder::Aware(0.80)),
+                ("always_yes", PriorResponder::AlwaysYes),
+                ("always_no", PriorResponder::AlwaysNo),
+                ("coin", PriorResponder::Coin),
+            ];
+            let rs: Vec<PriorResponder> = specs.iter().map(|s| s.1).collect();
+            let sizes = [10usize, 100, 1000];
+            let mut blocks = Vec::new();
+            let mut aware_adv = Vec::new();
+            for &v in &sizes {
+                let cells = simulate_identify_prior(&rs, v, n, reps, resamples, seed);
+                aware_adv.push(cells[1].advantage);
+                let inner: Vec<String> = specs
+                    .iter()
+                    .zip(&cells)
+                    .map(|(s, c)| {
+                        format!(
+                            "      \"{}\": {{\"accuracy\": {:.4}, \"advantage\": {:.4}, \"advantage_up_rate\": {:.4}}}",
+                            s.0, c.accuracy, c.advantage, c.advantage_up_rate
+                        )
+                    })
+                    .collect();
+                blocks.push(format!(
+                    "    \"v{}\": {{\n      \"inverse_harmonic\": {:.4},\n{}\n    }}",
+                    v,
+                    1.0 / harmonic(v),
+                    inner.join(",\n")
+                ));
+            }
+            format!(
+                "  \"kind\": \"identify-frequency-prior\",\n  \"n_injected\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"identify_vs_frequency_prior\": {{\n    \"advantage_gain_large_minus_small\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                aware_adv[2] - aware_adv[0],
                 blocks.join(",\n"),
                 provenance(
                     started,

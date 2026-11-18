@@ -1,0 +1,34 @@
+{
+  "kind": "identify-frequency-prior",
+  "n_injected": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "identify_vs_frequency_prior": {
+    "advantage_gain_large_minus_small": 0.1773,
+    "v10": {
+      "inverse_harmonic": 0.3414,
+      "guesser": {"accuracy": 0.3408, "advantage": 0.0000, "advantage_up_rate": 0.0000},
+      "content_aware": {"accuracy": 0.8350, "advantage": 0.4941, "advantage_up_rate": 1.0000},
+      "always_yes": {"accuracy": 0.1810, "advantage": -0.1598, "advantage_up_rate": 0.0000},
+      "always_no": {"accuracy": 0.0000, "advantage": -0.3408, "advantage_up_rate": 0.0000},
+      "coin": {"accuracy": 0.0897, "advantage": -0.2512, "advantage_up_rate": 0.0000}
+    },
+    "v100": {
+      "inverse_harmonic": 0.1928,
+      "guesser": {"accuracy": 0.1919, "advantage": 0.0000, "advantage_up_rate": 0.0000},
+      "content_aware": {"accuracy": 0.8105, "advantage": 0.6186, "advantage_up_rate": 1.0000},
+      "always_yes": {"accuracy": 0.0610, "advantage": -0.1309, "advantage_up_rate": 0.0000},
+      "always_no": {"accuracy": 0.0000, "advantage": -0.1919, "advantage_up_rate": 0.0000},
+      "coin": {"accuracy": 0.0303, "advantage": -0.1616, "advantage_up_rate": 0.0000}
+    },
+    "v1000": {
+      "inverse_harmonic": 0.1336,
+      "guesser": {"accuracy": 0.1328, "advantage": 0.0000, "advantage_up_rate": 0.0000},
+      "content_aware": {"accuracy": 0.8042, "advantage": 0.6714, "advantage_up_rate": 1.0000},
+      "always_yes": {"accuracy": 0.0297, "advantage": -0.1030, "advantage_up_rate": 0.0000},
+      "always_no": {"accuracy": 0.0000, "advantage": -0.1328, "advantage_up_rate": 0.0000},
+      "coin": {"accuracy": 0.0145, "advantage": -0.1182, "advantage_up_rate": 0.0000}
+    }
+  },
+  "provenance": {"started_at": "2026-11-18T23:33:23Z", "seeds": [7], "command": "target/release/introscope identify-frequency-prior --seed 7 --reps 200 --out results/467-identify-frequency-prior.json", "hardware": "linux x86_64", "wall_s": 20.362, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

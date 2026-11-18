@@ -475,3 +475,24 @@ below 0.15, or its clustered rate is above 0.08, or the true detector's
 clustered power is below 0.80.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:33:07Z identify-frequency-prior proposal:3c05218ab2a7367956e99641e6dd6c6c2df075b1f71f6125e42b6f623abb17f2
+
+Hypothesis: with seed 7, 400 injected trials, 200 replicates and Zipf exponent
+1, a frequency-prior guesser that always names the top-ranked word has
+identification accuracy within 0.03 of 1/H_V at V=10 and V=1000 (H_V the
+harmonic number), while a content-aware namer (names the injected concept with
+probability 0.80, otherwise draws from the prior) has an identification
+advantage over the guesser that is larger at V=1000 than at V=10 by at least
+0.10; always-yes, always-no and a fair coin show an advantage interval
+excluding zero upward in at most 0.10 of replicates.
+
+Metric: /identify_vs_frequency_prior/advantage_gain_large_minus_small.
+
+Expected: increases to at least 0.10.
+
+Falsifier: the mean advantage gain is below 0.10, or the guesser's accuracy is
+farther than 0.03 from 1/H_V at either vocabulary size, or any degenerate
+responder exceeds an advantage-interval rate of 0.10.
+
+This is a simulation with no model queried.

@@ -300,3 +300,14 @@ has a mean d' of 0.0172. Its trial-level interval excludes zero in 0.225 of 200
 replicates and its item-clustered interval in 0.06. A true detector keeps a
 clustered excludes-zero rate of 1.0. This is a simulation; no model has been
 queried.
+
+## Identify-frequency-prior simulation
+
+`results/467-identify-frequency-prior.json` simulates concept identification
+at 400 injected trials with concepts drawn from a Zipf prior (exponent 1) over
+10, 100 and 1000 words. A guesser that always names the top-ranked word has
+accuracy 0.3408 at 10 words and 0.1328 at 1000 words, against 0.3414 and 0.1336
+for the inverse harmonic number. A content-aware namer has an advantage over the
+guesser of 0.4941 at 10 words and 0.6714 at 1000 words, a gain of 0.1773.
+Always-yes, always-no and a fair coin have an upward advantage rate of 0.0 at
+every size. This is a simulation; no model has been queried.
