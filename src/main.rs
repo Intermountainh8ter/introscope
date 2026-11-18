@@ -26,6 +26,11 @@ USAGE:
       Simulate five yes-lead wordings (0.0 to 0.4 added to every arm) and report
       raw yes-rate spread and factual-control-adjusted spread per responder.
 
+  introscope perturbation-confound --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a perturbation-reactive responder and a state reader over the
+      concept, matched-random and prompt-only arms; report how often each
+      control's gap interval excludes zero.
+
   introscope concept-random-prompt --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate three arms (injected concept, norm-matched random direction,
       prompt-only leading wording) for a state reader, a wording-follower and
@@ -322,6 +327,47 @@ fn run() -> Result<(), String> {
                 reps,
                 resamples,
                 cells[0].concept_minus_random,
+                cells[0].random_excludes_zero_rate,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "perturbation-confound" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let specs: [(&str, [f64; 3]); 2] = [
+                ("perturbation_shifter", [0.45, 0.45, 0.10]),
+                ("state_reader", [0.70, 0.10, 0.10]),
+            ];
+            let cells: Vec<_> = specs
+                .iter()
+                .enumerate()
+                .map(|(k, (_, p))| {
+                    simulate_three_arm(*p, n, reps, resamples, seed.wrapping_add(5000 * k as u64))
+                })
+                .collect();
+            let blocks: Vec<String> = specs
+                .iter()
+                .zip(cells.iter())
+                .map(|((name, p), c)| {
+                    format!(
+                        "    \"{}\": {{\"p_concept\": {:.2}, \"p_random\": {:.2}, \"p_prompt\": {:.2}, \"concept_minus_random\": {:.4}, \"concept_minus_prompt\": {:.4}, \"random_excludes_zero_rate\": {:.4}, \"prompt_excludes_zero_rate\": {:.4}}}",
+                        name, p[0], p[1], p[2], c.concept_minus_random, c.concept_minus_prompt,
+                        c.random_excludes_zero_rate, c.prompt_excludes_zero_rate
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"perturbation-confound\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"confound\": {{\n    \"shifter_prompt_only_excludes_zero_rate\": {:.4},\n    \"shifter_random_excludes_zero_rate\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                cells[0].prompt_excludes_zero_rate,
                 cells[0].random_excludes_zero_rate,
                 blocks.join(",\n"),
                 provenance(

@@ -205,3 +205,15 @@ of 0.05 it excludes zero in 0.565 of replicates, so the "every share" clause
 of the hypothesis is refuted. A general-capability responder excludes zero in
 at most 0.07 of replicates in every cell. This is a simulation; no model has
 been queried.
+
+## Perturbation-confound simulation
+
+`results/449-perturbation-confound.json` simulates 400 trials per arm and 200
+replicates over the concept, matched-random and prompt-only arms. A
+perturbation-reactive responder (yes probability 0.45 on the concept and random
+arms, 0.10 on prompt-only) has a concept-minus-prompt gap of 0.3503 with an
+interval that excludes zero in 1.0 of replicates, and a concept-minus-random gap
+of -0.0007 that excludes zero in 0.03 of replicates. A state reader (0.70, 0.10,
+0.10) excludes zero against both controls in 1.0 of replicates. A prompt-only
+control alone would be fooled; the matched-random control is not. This is a
+simulation; no model has been queried.

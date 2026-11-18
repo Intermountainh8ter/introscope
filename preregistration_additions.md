@@ -286,3 +286,25 @@ any cell. A power below 0.80 at 0.05 alone does not refute the metric
 expectation but does refute the "every share" clause and is reported as such.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T22:14:17Z perturbation-confound proposal:2890e9065ba6273d40af58888324e6cbe19af0927d79558ffff713aaf318c012
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a
+perturbation-reactive responder (yes probability 0.45 under the concept arm,
+0.45 under the matched random arm, 0.10 under the prompt-only arm) has a
+concept-minus-prompt interval excluding zero in at least 0.95 of replicates (a
+false positive for introspection if prompt-only were the only control) while
+its concept-minus-random interval excludes zero in at most 0.10 of replicates;
+a state-reader (0.70, 0.10, 0.10) excludes zero against both controls in at
+least 0.95 of replicates.
+
+Metric: /confound/shifter_prompt_only_excludes_zero_rate.
+
+Expected: at least 0.95 (range 0.95 to 1.0), with the shifter's
+concept-minus-random excludes-zero rate at most 0.10.
+
+Falsifier: the shifter's concept-minus-prompt excludes-zero rate is below 0.95,
+or its concept-minus-random rate is above 0.10, or the state-reader excludes
+zero against either control in fewer than 0.95 of replicates.
+
+This is a simulation with no model queried.

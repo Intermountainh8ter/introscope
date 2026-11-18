@@ -1,0 +1,13 @@
+{
+  "kind": "perturbation-confound",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "confound": {
+    "shifter_prompt_only_excludes_zero_rate": 1.0000,
+    "shifter_random_excludes_zero_rate": 0.0300,
+    "perturbation_shifter": {"p_concept": 0.45, "p_random": 0.45, "p_prompt": 0.10, "concept_minus_random": -0.0007, "concept_minus_prompt": 0.3503, "random_excludes_zero_rate": 0.0300, "prompt_excludes_zero_rate": 1.0000},
+    "state_reader": {"p_concept": 0.70, "p_random": 0.10, "p_prompt": 0.10, "concept_minus_random": 0.6011, "concept_minus_prompt": 0.6002, "random_excludes_zero_rate": 1.0000, "prompt_excludes_zero_rate": 1.0000}
+  },
+  "provenance": {"started_at": "2026-11-18T22:14:26Z", "seeds": [7], "command": "target/release/introscope perturbation-confound --seed 7 --reps 200 --out results/449-perturbation-confound.json", "hardware": "linux x86_64", "wall_s": 13.127, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
