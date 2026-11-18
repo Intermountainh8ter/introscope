@@ -1,0 +1,19 @@
+{
+  "kind": "strength-identity-gap",
+  "n_per_arm": 400,
+  "reps": 200,
+  "concepts": 10,
+  "metrics": {
+    "strength_minus_identity_gap": 0.2607,
+    "content_aware_gap": -0.4409,
+    "max_degenerate_abs_gap": 0.0197
+  },
+  "responders": {
+    "strength_only": {"mean_auroc": 0.7608, "mean_identification": 0.1002, "mean_gap": 0.2607, "mean_abs_gap": 0.2607},
+    "content_aware": {"mean_auroc": 0.7578, "mean_identification": 0.7987, "mean_gap": -0.4409, "mean_abs_gap": 0.4409},
+    "always_yes": {"mean_auroc": 0.5000, "mean_identification": 0.0984, "mean_gap": 0.0016, "mean_abs_gap": 0.0114},
+    "always_no": {"mean_auroc": 0.5000, "mean_identification": 0.1008, "mean_gap": -0.0008, "mean_abs_gap": 0.0110},
+    "fair_coin": {"mean_auroc": 0.5028, "mean_identification": 0.1016, "mean_gap": 0.0012, "mean_abs_gap": 0.0197}
+  },
+  "provenance": {"started_at": "2026-11-18T23:48:11Z", "seeds": [7], "command": "target/release/introscope strength-identity-gap --seed 7 --out results/470-strength-identity-gap.json", "hardware": "linux x86_64", "wall_s": 0.056, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

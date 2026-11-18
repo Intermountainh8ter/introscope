@@ -5,10 +5,11 @@ use introscope::{
     simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
     simulate_layer_selection, simulate_position_artifact, simulate_selfcross_power,
     simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
-    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
-    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder,
-    Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
-    CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
+    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -46,6 +47,7 @@ USAGE:
       items against an input-only classifier and a cross-predictor; report the
       smallest share whose advantage interval excludes zero in 0.80 of replicates.
 
+  introscope strength-identity-gap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope answer-position-artifact --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate an answer-A-biased responder with no state signal on a neutral
       and a threat condition under fixed and counterbalanced answer order.
@@ -514,6 +516,57 @@ fn run() -> Result<(), String> {
                 reps,
                 resamples,
                 min_share,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "strength-identity-gap" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let k = 10usize;
+            let specs = [
+                ("strength_only", GapResponder::StrengthOnly),
+                ("content_aware", GapResponder::Aware(0.80)),
+                ("always_yes", GapResponder::Constant),
+                ("always_no", GapResponder::Constant),
+                ("fair_coin", GapResponder::Coin),
+            ];
+            let res: Vec<GapArm> = specs
+                .iter()
+                .enumerate()
+                .map(|(j, (_, r))| {
+                    simulate_strength_identity_gap(
+                        *r,
+                        k,
+                        n,
+                        reps,
+                        seed.wrapping_add(7000 * j as u64),
+                    )
+                })
+                .collect();
+            let blocks: Vec<String> = specs
+                .iter()
+                .zip(res.iter())
+                .map(|((name, _), c)| {
+                    format!(
+                        "    \"{}\": {{\"mean_auroc\": {:.4}, \"mean_identification\": {:.4}, \"mean_gap\": {:.4}, \"mean_abs_gap\": {:.4}}}",
+                        name, c.mean_auroc, c.mean_identification, c.mean_gap, c.mean_abs_gap
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"strength-identity-gap\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"concepts\": {},\n  \"metrics\": {{\n    \"strength_minus_identity_gap\": {:.4},\n    \"content_aware_gap\": {:.4},\n    \"max_degenerate_abs_gap\": {:.4}\n  }},\n  \"responders\": {{\n{}\n  }},\n{}",
+                n,
+                reps,
+                k,
+                res[0].mean_gap,
+                res[1].mean_gap,
+                res[2..].iter().map(|c| c.mean_abs_gap).fold(0.0, f64::max),
                 blocks.join(",\n"),
                 provenance(
                     started,

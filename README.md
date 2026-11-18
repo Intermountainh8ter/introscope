@@ -335,3 +335,13 @@ replicates. Under counterbalanced order the drop is 0.0037 and the interval
 excludes zero in 0.05 of replicates. A fair coin shows a drop of -0.0003 under
 fixed order and -0.0019 under counterbalanced order. This is a simulation; no
 model has been queried.
+
+## Strength-identity-gap simulation
+
+`results/470-strength-identity-gap.json` simulates 400 injected and 400
+matched-random trials with 10 concepts over 200 replicates. A strength-only
+responder (graded readout, always names the same concept) has a mean
+chance-corrected gap of 0.2607 (AUROC 0.7608, identification accuracy 0.1002).
+A content-aware responder has a mean gap of -0.4409. The largest mean absolute
+gap among the always-yes, always-no and fair-coin responders is 0.0197. This is
+a simulation; no model has been queried.

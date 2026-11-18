@@ -537,3 +537,24 @@ counterbalanced drop has absolute value of 0.03 or more, or the coin shows an
 interval-excludes-zero rate above 0.10 under either order.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:47:54Z strength-identity-gap proposal:c60586f4b4b510d178163367fc4b1517a00a585e819a2670251707af7f3411d8
+
+Hypothesis: with seed 7, 400 injected and 400 matched-random trials, 10 equally
+likely concepts and 200 replicates, a strength-only responder (graded readout
+N(1.0,1) on injected trials, N(0,1) on matched-random trials, always names the
+same concept) has a mean chance-corrected gap (AUROC-0.5) minus
+(identification accuracy-0.1) of at least 0.20, while a content-aware responder
+(same readout, names the injected concept with probability 0.80) has a mean gap
+below 0, and always-yes, always-no and fair-coin responders have a mean
+absolute gap of at most 0.05.
+
+Metric: /metrics/strength_minus_identity_gap.
+
+Expected: at least 0.20 (range 0.20 to 0.32).
+
+Falsifier: the strength-only mean gap is below 0.20, or the content-aware mean
+gap is not below 0, or any degenerate responder has a mean absolute gap above
+0.05.
+
+This is a simulation with no model queried.

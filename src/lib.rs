@@ -2027,3 +2027,83 @@ pub fn simulate_position_artifact(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+/// Responder kinds for the strength-identity gap simulation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum GapResponder {
+    /// Graded readout, always names the same concept.
+    StrengthOnly,
+    /// Same readout, names the injected concept with this probability.
+    Aware(f64),
+    /// Constant readout, always names the same concept.
+    Constant,
+    /// Uniform random readout, random naming.
+    Coin,
+}
+
+/// Mean results for one responder in the strength-identity gap simulation.
+pub struct GapArm {
+    pub mean_auroc: f64,
+    pub mean_identification: f64,
+    /// Mean of (AUROC - 0.5) - (identification accuracy - 1/k).
+    pub mean_gap: f64,
+    /// Mean of the absolute per-replicate gap.
+    pub mean_abs_gap: f64,
+}
+
+/// Simulate `n` injected and `n` matched-random trials with `k` equally likely
+/// concepts. Strength is scored as AUROC of the readout (injected vs matched
+/// random); identification is the accuracy of the named concept on injected
+/// trials. Both are chance-corrected before subtracting.
+pub fn simulate_strength_identity_gap(
+    responder: GapResponder,
+    k: usize,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> GapArm {
+    let mut rng = Rng::new(seed);
+    let (mut sa, mut si, mut sg, mut sabs) = (0.0, 0.0, 0.0, 0.0);
+    for _ in 0..reps {
+        let mut items = Vec::with_capacity(2 * n);
+        let mut hits = 0usize;
+        for _ in 0..n {
+            let truth = rng.below(k);
+            let (score, named) = match responder {
+                GapResponder::StrengthOnly => (1.0 + rng.normal(), 0),
+                GapResponder::Aware(q) => (
+                    1.0 + rng.normal(),
+                    naming_draw(Naming::Aware(q), truth, k, &mut rng),
+                ),
+                GapResponder::Constant => (0.0, 0),
+                GapResponder::Coin => (rng.unit(), rng.below(k)),
+            };
+            if named == truth {
+                hits += 1;
+            }
+            items.push((score, true));
+        }
+        for _ in 0..n {
+            let score = match responder {
+                GapResponder::StrengthOnly | GapResponder::Aware(_) => rng.normal(),
+                GapResponder::Constant => 0.0,
+                GapResponder::Coin => rng.unit(),
+            };
+            items.push((score, false));
+        }
+        let a = auroc(&items).unwrap_or(0.5);
+        let id = hits as f64 / n as f64;
+        let gap = (a - 0.5) - (id - 1.0 / k as f64);
+        sa += a;
+        si += id;
+        sg += gap;
+        sabs += gap.abs();
+    }
+    let r = reps as f64;
+    GapArm {
+        mean_auroc: sa / r,
+        mean_identification: si / r,
+        mean_gap: sg / r,
+        mean_abs_gap: sabs / r,
+    }
+}
