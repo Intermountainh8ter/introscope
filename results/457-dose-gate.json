@@ -1,0 +1,14 @@
+{
+  "kind": "dose-gate",
+  "n_per_arm": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "dose_gate": {
+    "threshold_dose": 1.0,
+    "concept_minus_random_at_threshold": 1.5024,
+    "dose_0.5": {"concept_true_d_prime": 0.0, "concept_mean_d_prime": 0.0014, "concept_excludes_zero_rate": 0.0350, "random_mean_d_prime": -0.0058, "random_excludes_zero_rate": 0.0400, "always_yes_mean_d_prime": 0.0000, "concept_minus_random": 0.0072},
+    "dose_1.0": {"concept_true_d_prime": 1.5, "concept_mean_d_prime": 1.5027, "concept_excludes_zero_rate": 1.0000, "random_mean_d_prime": 0.0003, "random_excludes_zero_rate": 0.0700, "always_yes_mean_d_prime": 0.0000, "concept_minus_random": 1.5024},
+    "dose_2.0": {"concept_true_d_prime": 1.5, "concept_mean_d_prime": 1.5090, "concept_excludes_zero_rate": 1.0000, "random_mean_d_prime": -0.0011, "random_excludes_zero_rate": 0.0400, "always_yes_mean_d_prime": 0.0000, "concept_minus_random": 1.5101}
+  },
+  "provenance": {"started_at": "2026-11-18T22:47:40Z", "seeds": [7], "command": "target/release/introscope dose-gate --out results/457-dose-gate.json --seed 7 --n 400 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 28.218, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

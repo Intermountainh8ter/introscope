@@ -1,11 +1,11 @@
 use introscope::{
-    iso_utc, json_escape, parse_trials, report_json, score, simulate_confidence_channel,
-    simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
-    simulate_input_only_baseline, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_three_arm, simulate_wording_arm, simulate_wording_cell,
-    simulate_wording_design, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
-    ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
-    CONCEPT_DISRUPTION, WORDING_LEADS,
+    dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
+    simulate_confidence_channel, simulate_detect_identify, simulate_detect_power,
+    simulate_impact_matched, simulate_input_only_baseline, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs,
+    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -31,6 +31,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope dose-gate --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a dose-gated responder, a matched-random-direction responder and
+      an always-yes responder at doses 0.5, 1.0 and 2.0 (threshold 1.0); report
+      concept-minus-random mean d' per dose.
 
   introscope wording-confounded-design --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a wording-follower and a true-state responder in a design where
@@ -379,6 +384,67 @@ fn run() -> Result<(), String> {
                 resamples,
                 k,
                 res[1].margin,
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "dose-gate" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let doses = [0.5_f64, 1.0, 2.0];
+            let always_yes = WordingProbs {
+                injected_leading: 1.0,
+                injected_neutral: 1.0,
+                noise_leading: 1.0,
+                noise_neutral: 1.0,
+            };
+            let mut blocks = Vec::new();
+            let mut at_threshold = 0.0;
+            for (k, dose) in doses.iter().enumerate() {
+                let s = seed.wrapping_add(10000 * k as u64);
+                let concept = simulate_detect_power(
+                    dose_gated_d_prime(*dose, 1.0, 1.5),
+                    n,
+                    reps,
+                    resamples,
+                    s,
+                );
+                let random = simulate_detect_power(0.0, n, reps, resamples, s.wrapping_add(5000));
+                let yes = simulate_wording_design(
+                    always_yes,
+                    false,
+                    n,
+                    reps,
+                    resamples,
+                    s.wrapping_add(7000),
+                );
+                let gap = concept.mean_d_prime - random.mean_d_prime;
+                if *dose == 1.0 {
+                    at_threshold = gap;
+                }
+                blocks.push(format!(
+                    "    \"dose_{:.1}\": {{\"concept_true_d_prime\": {:.1}, \"concept_mean_d_prime\": {:.4}, \"concept_excludes_zero_rate\": {:.4}, \"random_mean_d_prime\": {:.4}, \"random_excludes_zero_rate\": {:.4}, \"always_yes_mean_d_prime\": {:.4}, \"concept_minus_random\": {:.4}}}",
+                    dose,
+                    concept.true_d_prime,
+                    concept.mean_d_prime,
+                    concept.excludes_zero_rate,
+                    random.mean_d_prime,
+                    random.excludes_zero_rate,
+                    yes.mean_d_prime,
+                    gap
+                ));
+            }
+            format!(
+                "  \"kind\": \"dose-gate\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"dose_gate\": {{\n    \"threshold_dose\": 1.0,\n    \"concept_minus_random_at_threshold\": {:.4},\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                at_threshold,
                 blocks.join(",\n"),
                 provenance(
                     started,

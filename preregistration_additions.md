@@ -355,3 +355,24 @@ exclusion rate exceeds 0.10, or the true-state responder's mean d' falls below
 1.3 in either design.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T22:47:28Z dose-gate proposal:1ed482158bc9deb20c05ebd39420a7846e9e8ffb0b6cadb439e83291b3fbbe1c
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a dose-gated
+responder (true d' 0 at dose 0.5, below the threshold of 1.0; true d' 1.5 at
+doses 1.0 and 2.0) has a concept-minus-random mean d' within 0.15 of 0 at dose
+0.5 and at least 1.3 at dose 1.0, while a matched-random-direction responder
+has mean d' within 0.10 of 0 at every dose and an interval excluding zero in at
+most 0.10 of replicates, and an always-yes responder shows mean d' of 0 at
+every dose.
+
+Metric: /dose_gate/concept_minus_random_at_threshold.
+
+Expected: at least 1.3 (range 1.3 to 1.7).
+
+Falsifier: the concept-minus-random mean d' at dose 0.5 is farther than 0.15
+from 0, or at the threshold dose is below 1.3, or the random arm's mean d' is
+farther than 0.10 from 0 at any dose or excludes zero in more than 0.10 of
+replicates, or the always-yes responder's mean d' is not 0.
+
+This is a simulation with no model queried.

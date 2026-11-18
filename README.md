@@ -241,3 +241,13 @@ with an interval that excludes zero in 1.0 of replicates, and a mean d' of
 -0.0079 in a wording-balanced design, excluding zero in 0.03 of replicates. The
 gap is 1.0536. A true-state responder keeps a mean d' of 1.5030 and 1.5033 in
 the two designs. This is a simulation; no model has been queried.
+
+## Dose-gate simulation
+
+`results/457-dose-gate.json` simulates a dose-gated detect responder at 400
+trials per arm and 200 replicates, with a threshold dose of 1.0. Below the
+threshold (dose 0.5) the concept-minus-random mean d' is 0.0072; at the
+threshold it is 1.5024. The matched-random-direction responder has a mean d' of
+0.0003 at the threshold dose and excludes zero in 0.07 of replicates, and the
+always-yes responder has a mean d' of 0.0 at every dose. This is a simulation;
+no model has been queried.

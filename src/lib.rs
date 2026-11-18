@@ -1531,3 +1531,13 @@ pub fn simulate_wording_design(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+/// True d' of a dose-gated responder: zero below the threshold dose, `strong`
+/// at or above it.
+pub fn dose_gated_d_prime(dose: f64, threshold: f64, strong: f64) -> f64 {
+    if dose >= threshold {
+        strong
+    } else {
+        0.0
+    }
+}
