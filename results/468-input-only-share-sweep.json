@@ -1,0 +1,20 @@
+{
+  "kind": "input-only-share-sweep",
+  "n_items": 400,
+  "reps": 200,
+  "resamples": 2000,
+  "input_accuracy": 0.75,
+  "cross_accuracy": 0.60,
+  "sweep": {
+    "min_share_for_power_0_80": 0.10,
+    "cells": {
+      "s0.00": {"share": 0.00, "self_advantage": 0.0000, "self_up_rate": 0.0000, "cross_advantage": 0.1532, "cross_up_rate": 0.9900, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000},
+      "s0.05": {"share": 0.05, "self_advantage": 0.0125, "self_up_rate": 0.7600, "cross_advantage": 0.1627, "cross_up_rate": 1.0000, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000},
+      "s0.10": {"share": 0.10, "self_advantage": 0.0252, "self_up_rate": 1.0000, "cross_advantage": 0.1781, "cross_up_rate": 1.0000, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000},
+      "s0.15": {"share": 0.15, "self_advantage": 0.0387, "self_up_rate": 1.0000, "cross_advantage": 0.1829, "cross_up_rate": 1.0000, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000},
+      "s0.20": {"share": 0.20, "self_advantage": 0.0484, "self_up_rate": 1.0000, "cross_advantage": 0.1995, "cross_up_rate": 1.0000, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000},
+      "s0.30": {"share": 0.30, "self_advantage": 0.0745, "self_up_rate": 1.0000, "cross_advantage": 0.2257, "cross_up_rate": 1.0000, "always_yes_up_rate": 0.0000, "always_no_up_rate": 0.0000, "coin_up_rate": 0.0000}
+    }
+  },
+  "provenance": {"started_at": "2026-11-18T23:38:18Z", "seeds": [7], "command": "target/release/introscope input-only-share-sweep --seed 7 --out results/468-input-only-share-sweep.json", "hardware": "linux x86_64", "wall_s": 40.071, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

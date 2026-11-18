@@ -496,3 +496,23 @@ farther than 0.03 from 1/H_V at either vocabulary size, or any degenerate
 responder exceeds an advantage-interval rate of 0.10.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:38:03Z input-only-share-sweep proposal:349f307a1e32f9ccf8621befd5844cc085b8e719d7f2ffe4a217e300114f2010
+
+Hypothesis: with seed 7, 400 items per arm, 200 replicates and input-signal
+accuracy 0.75 for the input-only classifier, a self-predictor whose answers use
+a privileged signal on a share s of items (otherwise the input signal) has a
+mean advantage over the input-only classifier near 0 at s=0 (absolute value
+below 0.03) and an interval excluding zero in at least 0.80 of replicates only
+from s=0.10 upward, while always-yes, always-no and a fair coin exclude zero
+upward in at most 0.10 of replicates at every share.
+
+Metric: /sweep/min_share_for_power_0_80.
+
+Expected: between 0.05 and 0.15 inclusive.
+
+Falsifier: the minimum share for power 0.80 falls outside 0.05 to 0.15, or the
+advantage at s=0 has absolute value of 0.03 or more, or any degenerate
+responder exceeds an interval rate of 0.10 at any share.
+
+This is a simulation with no model queried.

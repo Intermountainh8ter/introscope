@@ -311,3 +311,15 @@ for the inverse harmonic number. A content-aware namer has an advantage over the
 guesser of 0.4941 at 10 words and 0.6714 at 1000 words, a gain of 0.1773.
 Always-yes, always-no and a fair coin have an upward advantage rate of 0.0 at
 every size. This is a simulation; no model has been queried.
+
+## Input-only share sweep
+
+`results/468-input-only-share-sweep.json` simulates a self-predictor that uses a
+privileged signal on a share of 400 items and the input signal otherwise,
+against an input-only classifier with accuracy 0.75 and a cross-predictor with
+accuracy 0.60. The smallest share whose advantage interval excludes zero in at
+least 0.80 of 200 replicates is 0.10. At share 0.00 the advantage over the
+input-only classifier is 0.0 and its interval excludes zero in 0.0 of
+replicates; at share 0.05 the rate is 0.76. Always-yes, always-no and a fair
+coin exclude zero upward in 0.0 of replicates at every share. This is a
+simulation; no model has been queried.

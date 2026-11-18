@@ -1898,3 +1898,82 @@ pub fn simulate_identify_prior(
         })
         .collect()
 }
+
+/// One share of the input-only sweep: advantage of each responder over the
+/// input-only classifier and the self-predictor's advantage over a cross-predictor.
+pub struct ShareCell {
+    pub share: f64,
+    pub self_advantage: f64,
+    pub self_up_rate: f64,
+    pub cross_advantage: f64,
+    pub cross_up_rate: f64,
+    pub always_yes_up_rate: f64,
+    pub always_no_up_rate: f64,
+    pub coin_up_rate: f64,
+}
+
+/// Simulate `reps` tables of `n` binary items at one privileged-signal share.
+/// The input-only classifier is right with probability `input_acc`; the
+/// self-predictor repeats the input signal except on a share of items where a
+/// privileged signal makes it right; the cross-predictor is right with
+/// probability `cross_acc`. Advantages are paired differences in accuracy.
+pub fn simulate_share_cell(
+    share: f64,
+    input_acc: f64,
+    cross_acc: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ShareCell {
+    let mut rng = Rng::new(seed);
+    let n_priv = (share * n as f64).round() as usize;
+    let mut sum_self = 0.0;
+    let mut sum_cross = 0.0;
+    let mut up = [0usize; 5];
+    for rep in 0..reps {
+        let mut cols = vec![vec![0.0f64; n]; 6];
+        for i in 0..n {
+            let truth = rng.coin(0.5);
+            let input = rng.coin(input_acc);
+            let own = input || i < n_priv;
+            let cross = rng.coin(cross_acc);
+            let coin = rng.coin(0.5) == truth;
+            let vals = [input, own, cross, truth, !truth, coin];
+            for (c, v) in cols.iter_mut().zip(vals) {
+                c[i] = v as u8 as f64;
+            }
+        }
+        let mean = |c: &[f64]| c.iter().sum::<f64>() / n as f64;
+        sum_self += mean(&cols[1]) - mean(&cols[0]);
+        sum_cross += mean(&cols[1]) - mean(&cols[2]);
+        // (minuend, subtrahend) column pairs: self-input, self-cross, then
+        // always-yes, always-no, coin against the input classifier.
+        let pairs = [(1, 0), (1, 2), (3, 0), (4, 0), (5, 0)];
+        for (k, &(a, b)) in pairs.iter().enumerate() {
+            let diff = |idx: &[usize]| {
+                idx.iter().map(|&i| cols[a][i] - cols[b][i]).sum::<f64>() / idx.len() as f64
+            };
+            let ci = bootstrap_ci(
+                n,
+                diff,
+                resamples,
+                seed.wrapping_add(rep as u64 + 1 + 1000 * k as u64),
+            );
+            if ci.0 > 0.0 {
+                up[k] += 1;
+            }
+        }
+    }
+    let r = reps as f64;
+    ShareCell {
+        share,
+        self_advantage: sum_self / r,
+        self_up_rate: up[0] as f64 / r,
+        cross_advantage: sum_cross / r,
+        cross_up_rate: up[1] as f64 / r,
+        always_yes_up_rate: up[2] as f64 / r,
+        always_no_up_rate: up[3] as f64 / r,
+        coin_up_rate: up[4] as f64 / r,
+    }
+}

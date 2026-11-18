@@ -4,10 +4,11 @@ use introscope::{
     simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
     simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
     simulate_layer_selection, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_stack_drift, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder, Naming, PriorResponder,
-    Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_three_arm,
+    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
+    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder, Naming,
+    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -40,6 +41,11 @@ USAGE:
       the hit-minus-false-alarm gap move across stacks.
 
   introscope identify-frequency-prior --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+  introscope input-only-share-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
+      Simulate a self-predictor that uses a privileged signal on a share of
+      items against an input-only classifier and a cross-predictor; report the
+      smallest share whose advantage interval excludes zero in 0.80 of replicates.
+
   introscope resample-cluster --out <results.json> [--seed 7] [--items 100] [--k 4] [--reps 200] [--resamples 2000]
       Simulate a null responder with a fixed per-item yes bias and a true
       detector, each item sampled k times; compare a trial-level interval with
@@ -456,6 +462,54 @@ fn run() -> Result<(), String> {
                 reps,
                 resamples,
                 aware_adv[2] - aware_adv[0],
+                blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "input-only-share-sweep" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let shares = [0.0, 0.05, 0.10, 0.15, 0.20, 0.30];
+            let cells: Vec<_> = shares
+                .iter()
+                .enumerate()
+                .map(|(k, &s)| {
+                    simulate_share_cell(
+                        s,
+                        0.75,
+                        0.60,
+                        n,
+                        reps,
+                        resamples,
+                        seed.wrapping_add(7000 * k as u64),
+                    )
+                })
+                .collect();
+            let min_share = cells
+                .iter()
+                .find(|c| c.self_up_rate >= 0.80)
+                .map_or(-1.0, |c| c.share);
+            let blocks: Vec<String> = cells
+                .iter()
+                .map(|c| {
+                    format!(
+                        "      \"s{:.2}\": {{\"share\": {:.2}, \"self_advantage\": {:.4}, \"self_up_rate\": {:.4}, \"cross_advantage\": {:.4}, \"cross_up_rate\": {:.4}, \"always_yes_up_rate\": {:.4}, \"always_no_up_rate\": {:.4}, \"coin_up_rate\": {:.4}}}",
+                        c.share, c.share, c.self_advantage, c.self_up_rate, c.cross_advantage,
+                        c.cross_up_rate, c.always_yes_up_rate, c.always_no_up_rate, c.coin_up_rate
+                    )
+                })
+                .collect();
+            format!(
+                "  \"kind\": \"input-only-share-sweep\",\n  \"n_items\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"input_accuracy\": 0.75,\n  \"cross_accuracy\": 0.60,\n  \"sweep\": {{\n    \"min_share_for_power_0_80\": {:.2},\n    \"cells\": {{\n{}\n    }}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                min_share,
                 blocks.join(",\n"),
                 provenance(
                     started,
