@@ -272,3 +272,12 @@ introspector has a mismatch-arm detection advantage of 0.0008 and a matched-arm
 advantage of 0.4991. A global-Yes shifter has a mismatch-arm advantage of
 0.4004 and a content-agnostic detector has 0.4009. This is a simulation; no
 model has been queried.
+
+## Layer-selection simulation
+
+`results/462-layer-selection.json` simulates 24 injection layers at 100 signal
+and 100 noise trials per layer and 200 replicates. A null responder (yes
+probability 0.5 on both arms) has a mean best-of-24-layers d' of 0.3433 and a
+mean d' of 0.0062 at the pre-specified layer. A true introspector (d' 1.0 at
+one layer only) has a best-layer d' of 1.0087. This is a simulation; no model
+has been queried.

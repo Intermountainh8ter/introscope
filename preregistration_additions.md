@@ -419,3 +419,21 @@ from 0, or its matched-arm advantage is below 0.45, or either non-introspective
 responder's mismatch-arm advantage is below 0.35.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:12:53Z layer-selection proposal:218d7f426a12e128e1a41395c9e2252de0f796f5b5a62d2b67940b84d2756f69
+
+Hypothesis: with seed 7, 24 layers, 100 signal and 100 noise trials per layer
+and 200 replicates, a null responder (no information, yes probability 0.5 on
+both arms) has a mean best-of-24-layers d' of at least 0.25 while its mean d'
+at the pre-specified layer is within 0.05 of 0; a true introspector (d' 1.0 at
+one layer only) keeps a best-layer d' of at least 0.8.
+
+Metric: /responders/null/best_layer_dprime_mean.
+
+Expected: increases to at least 0.25 (range 0.25 to 1.0).
+
+Falsifier: the null responder's mean best-of-24 d' is below 0.25, or its
+pre-specified-layer d' is farther than 0.05 from 0, or the true introspector's
+best-layer d' is below 0.8.
+
+This is a simulation with no model queried.

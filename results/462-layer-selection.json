@@ -1,0 +1,12 @@
+{
+  "kind": "layer-selection",
+  "layers": 24,
+  "pre_specified_layer": 12,
+  "n_per_arm": 100,
+  "reps": 200,
+  "responders": {
+    "null": {"best_layer_dprime_mean": 0.3433, "pre_specified_dprime_mean": 0.0062},
+    "true_introspector": {"best_layer_dprime_mean": 1.0087, "pre_specified_dprime_mean": 1.0087}
+  },
+  "provenance": {"started_at": "2026-11-18T23:13:05Z", "seeds": [7], "command": "target/release/introscope layer-selection --out results/462-layer-selection.json --seed 7 --layers 24 --n 100 --reps 200", "hardware": "linux x86_64", "wall_s": 0.017, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

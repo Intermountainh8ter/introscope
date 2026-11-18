@@ -1627,3 +1627,44 @@ pub fn simulate_concept_mismatch(
         mismatch_advantage: mismatch_sum / r,
     }
 }
+
+/// Mean best-of-layers d' and mean d' at one pre-specified layer.
+#[derive(Debug, Clone)]
+pub struct LayerArm {
+    pub best_layer_mean: f64,
+    pub pre_specified_mean: f64,
+}
+
+/// Simulate `reps` detect tables of `n` signal and `n` noise trials at each
+/// layer. `true_d` gives each layer's true d' (unbiased criterion); the score
+/// is the maximum d' over layers and the d' at layer `pre_layer`.
+pub fn simulate_layer_selection(
+    true_d: &[f64],
+    pre_layer: usize,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> LayerArm {
+    let mut rng = Rng::new(seed);
+    let (mut best_sum, mut pre_sum) = (0.0, 0.0);
+    for _ in 0..reps {
+        let mut best = f64::NEG_INFINITY;
+        for (l, d) in true_d.iter().enumerate() {
+            let hit_p = norm_cdf(d / 2.0);
+            let fa_p = norm_cdf(-d / 2.0);
+            let hits = (0..n).filter(|_| rng.coin(hit_p)).count();
+            let fas = (0..n).filter(|_| rng.coin(fa_p)).count();
+            let v = d_prime(hits, n, fas, n);
+            if l == pre_layer {
+                pre_sum += v;
+            }
+            best = best.max(v);
+        }
+        best_sum += best;
+    }
+    let r = reps as f64;
+    LayerArm {
+        best_layer_mean: best_sum / r,
+        pre_specified_mean: pre_sum / r,
+    }
+}

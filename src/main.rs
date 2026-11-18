@@ -2,11 +2,11 @@ use introscope::{
     dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
-    simulate_input_only_baseline, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_three_arm, simulate_wording_arm, simulate_wording_cell,
-    simulate_wording_design, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
-    ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
-    CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_input_only_baseline, simulate_layer_selection, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs,
+    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -32,6 +32,10 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope layer-selection --out <results.json> [--seed 7] [--layers 24] [--n 100] [--reps 200]
+      Simulate a null responder and a one-layer introspector scored at the best
+      of all layers and at one pre-specified layer.
 
   introscope concept-mismatch --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
   introscope control-question --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
@@ -392,6 +396,38 @@ fn run() -> Result<(), String> {
                 k,
                 res[1].margin,
                 blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "layer-selection" => {
+            let layers = args.number("--layers", 24)? as usize;
+            let n = args.number("--n", 100)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let pre = layers / 2;
+            let null = vec![0.0; layers];
+            let mut intro = vec![0.0; layers];
+            intro[pre] = 1.0;
+            let a_null = simulate_layer_selection(&null, pre, n, reps, seed);
+            let a_intro = simulate_layer_selection(&intro, pre, n, reps, seed.wrapping_add(10000));
+            let resp = |name: &str, a: &introscope::LayerArm| {
+                format!(
+                    "    \"{}\": {{\"best_layer_dprime_mean\": {:.4}, \"pre_specified_dprime_mean\": {:.4}}}",
+                    name, a.best_layer_mean, a.pre_specified_mean
+                )
+            };
+            format!(
+                "  \"kind\": \"layer-selection\",\n  \"layers\": {},\n  \"pre_specified_layer\": {},\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"responders\": {{\n{},\n{}\n  }},\n{}",
+                layers,
+                pre,
+                n,
+                reps,
+                resp("null", &a_null),
+                resp("true_introspector", &a_intro),
                 provenance(
                     started,
                     seed,
