@@ -1593,3 +1593,37 @@ pub fn simulate_control_question(
         mean_corrected_gap: cor_sum / r,
     }
 }
+
+/// Mean detection advantage (yes rate injected minus not injected) of a
+/// responder on the matched-question arm and on the mismatched-question arm.
+#[derive(Debug, Clone)]
+pub struct MismatchArm {
+    pub matched_advantage: f64,
+    pub mismatch_advantage: f64,
+}
+
+/// Simulate a responder injected with concept A and asked either about A
+/// (matched) or about B (mismatch). `yes_matched` and `yes_mismatch` are the
+/// yes probabilities under injection on each question; `yes_noise` applies
+/// without injection on both.
+pub fn simulate_concept_mismatch(
+    yes_matched: f64,
+    yes_mismatch: f64,
+    yes_noise: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> MismatchArm {
+    let mut rng = Rng::new(seed);
+    let rate = |rng: &mut Rng, p: f64| (0..n).filter(|_| rng.coin(p)).count() as f64 / n as f64;
+    let (mut matched_sum, mut mismatch_sum) = (0.0, 0.0);
+    for _ in 0..reps {
+        matched_sum += rate(&mut rng, yes_matched) - rate(&mut rng, yes_noise);
+        mismatch_sum += rate(&mut rng, yes_mismatch) - rate(&mut rng, yes_noise);
+    }
+    let r = reps as f64;
+    MismatchArm {
+        matched_advantage: matched_sum / r,
+        mismatch_advantage: mismatch_sum / r,
+    }
+}

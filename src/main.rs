@@ -1,11 +1,12 @@
 use introscope::{
     dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
-    simulate_confidence_channel, simulate_control_question, simulate_detect_identify,
-    simulate_detect_power, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_three_arm,
-    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
-    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder,
-    SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
+    simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
+    simulate_input_only_baseline, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_three_arm, simulate_wording_arm, simulate_wording_cell,
+    simulate_wording_design, synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl,
+    ImpactResponder, Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder,
+    CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -32,6 +33,7 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope concept-mismatch --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
   introscope control-question --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate steering that lifts the Yes rate on both the introspection
       question and control questions; compare raw and control-corrected
@@ -390,6 +392,41 @@ fn run() -> Result<(), String> {
                 k,
                 res[1].margin,
                 blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "concept-mismatch" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let intro = simulate_concept_mismatch(0.70, 0.20, 0.20, n, reps, seed);
+            let shifter =
+                simulate_concept_mismatch(0.60, 0.60, 0.20, n, reps, seed.wrapping_add(10000));
+            let agnostic =
+                simulate_concept_mismatch(0.60, 0.60, 0.20, n, reps, seed.wrapping_add(20000));
+            let resp = |name: &str, a: &introscope::MismatchArm| {
+                format!(
+                    "    \"{}\": {{\"matched_detection_advantage\": {:.4}, \"mismatch_detection_advantage\": {:.4}}}",
+                    name, a.matched_advantage, a.mismatch_advantage
+                )
+            };
+            format!(
+                "  \"kind\": \"concept-mismatch\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"arms\": {{\n    \"mismatch\": {{\"detection_advantage\": {:.4}}},\n    \"matched\": {{\"detection_advantage\": {:.4}}}\n  }},\n  \"responders\": {{\n{}\n  }},\n{}",
+                n,
+                reps,
+                resamples,
+                intro.mismatch_advantage,
+                intro.matched_advantage,
+                [
+                    resp("true_introspector", &intro),
+                    resp("global_yes_shifter", &shifter),
+                    resp("content_agnostic_detector", &agnostic)
+                ]
+                .join(",\n"),
                 provenance(
                     started,
                     seed,

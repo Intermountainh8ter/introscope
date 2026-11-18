@@ -263,3 +263,12 @@ and passes in 0.0100 of replicates. A true-detection responder passes the
 corrected score in 0.9800 of replicates. The raw-minus-corrected false-pass
 rate is 0.9900. At the lowest dose the same difference is 0.0500. This is a
 simulation; no model has been queried.
+
+## Concept-mismatch simulation
+
+`results/461-concept-mismatch.json` simulates a concept injected for question A
+and a responder asked about B, at 400 trials per arm and 200 replicates. A true
+introspector has a mismatch-arm detection advantage of 0.0008 and a matched-arm
+advantage of 0.4991. A global-Yes shifter has a mismatch-arm advantage of
+0.4004 and a content-agnostic detector has 0.4009. This is a simulation; no
+model has been queried.

@@ -398,3 +398,24 @@ corrected pass rate is above 0.10, or the true-detection responder's corrected
 pass rate is below 0.9, or the difference is below 0.80.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:05:42Z concept-mismatch proposal:e40008a9c2cd3fc6b06cb3ec77fef2fea604b1da988f679da11957d39b68b5ac
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a true
+introspector (yes probability 0.70 under injection on the matched question,
+0.20 otherwise including the mismatched question) has a mismatch-arm detection
+advantage (yes rate injected minus not injected) within 0.05 of 0 and a
+matched-arm advantage of at least 0.45, while a global-Yes shifter and a
+content-agnostic detector (yes probability 0.60 under injection versus 0.20
+without, on both matched and mismatched questions) have a mismatch-arm
+advantage of at least 0.35.
+
+Metric: /arms/mismatch/detection_advantage.
+
+Expected: within 0.05 of 0 for the true introspector (matched arm at least 0.45).
+
+Falsifier: the true introspector's mismatch-arm advantage is farther than 0.05
+from 0, or its matched-arm advantage is below 0.45, or either non-introspective
+responder's mismatch-arm advantage is below 0.35.
+
+This is a simulation with no model queried.
