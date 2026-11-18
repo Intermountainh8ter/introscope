@@ -1697,3 +1697,97 @@ pub fn simulate_stack_drift(d: f64, shift: f64, n: usize, reps: usize, seed: u64
         gap_mean: g_sum / r,
     }
 }
+
+/// Responder whose yes probability varies by item.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ItemResponder {
+    /// No access to the injection: per-item yes probability drawn from
+    /// Beta(0.5, 0.5) (mean 0.5), identical in both arms.
+    NullItemBias,
+    /// True d' of 1.0 with a per-item criterion shift of sd 0.5.
+    Detector,
+}
+
+/// Trial-level and item-clustered interval behaviour for one responder.
+#[derive(Debug, Clone)]
+pub struct ClusterArm {
+    pub mean_d_prime: f64,
+    pub trial_level_excludes_zero_rate: f64,
+    pub clustered_excludes_zero_rate: f64,
+}
+
+/// Percentile bootstrap of d' over units in each arm. Each unit holds
+/// `per_unit` trials and `counts` gives its hits.
+fn two_arm_ci(
+    sig: &[usize],
+    noi: &[usize],
+    per_unit: usize,
+    resamples: usize,
+    rng: &mut Rng,
+) -> (f64, f64) {
+    let (ns, nn) = (sig.len(), noi.len());
+    let mut vals = Vec::with_capacity(resamples);
+    for _ in 0..resamples {
+        let h: usize = (0..ns).map(|_| sig[rng.below(ns)]).sum();
+        let f: usize = (0..nn).map(|_| noi[rng.below(nn)]).sum();
+        vals.push(d_prime(h, ns * per_unit, f, nn * per_unit));
+    }
+    vals.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let at = |q: f64| vals[((vals.len() - 1) as f64 * q).round() as usize];
+    (at(0.025), at(0.975))
+}
+
+/// Simulate `reps` detect tables with `items` items per arm, each sampled `k`
+/// times, and score each with a trial-level bootstrap (every sample treated
+/// as independent) and an item-clustered bootstrap (items resampled).
+pub fn simulate_item_cluster(
+    responder: ItemResponder,
+    items: usize,
+    k: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> ClusterArm {
+    let mut rng = Rng::new(seed);
+    let (mut d_sum, mut trial_excl, mut clust_excl) = (0.0, 0usize, 0usize);
+    for _ in 0..reps {
+        let mut arms: [Vec<usize>; 2] = [Vec::new(), Vec::new()];
+        for (a, arm) in arms.iter_mut().enumerate() {
+            for _ in 0..items {
+                let p = match responder {
+                    ItemResponder::NullItemBias => {
+                        (std::f64::consts::FRAC_PI_2 * rng.unit()).sin().powi(2)
+                    }
+                    ItemResponder::Detector => {
+                        let sign = if a == 0 { 0.5 } else { -0.5 };
+                        norm_cdf(sign - 0.5 * rng.normal())
+                    }
+                };
+                arm.push((0..k).filter(|_| rng.coin(p)).count());
+            }
+        }
+        let h: usize = arms[0].iter().sum();
+        let f: usize = arms[1].iter().sum();
+        d_sum += d_prime(h, items * k, f, items * k);
+        let flat = |v: &[usize]| -> Vec<usize> {
+            v.iter()
+                .flat_map(|c| (0..k).map(move |j| usize::from(j < *c)))
+                .collect()
+        };
+        let (sf, nf) = (flat(&arms[0]), flat(&arms[1]));
+        let t = two_arm_ci(&sf, &nf, 1, resamples, &mut rng);
+        let c = two_arm_ci(&arms[0], &arms[1], k, resamples, &mut rng);
+        if t.0 > 0.0 || t.1 < 0.0 {
+            trial_excl += 1;
+        }
+        if c.0 > 0.0 || c.1 < 0.0 {
+            clust_excl += 1;
+        }
+    }
+    let r = reps as f64;
+    ClusterArm {
+        mean_d_prime: d_sum / r,
+        trial_level_excludes_zero_rate: trial_excl as f64 / r,
+        clustered_excludes_zero_rate: clust_excl as f64 / r,
+    }
+}

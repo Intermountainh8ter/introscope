@@ -2,11 +2,12 @@ use introscope::{
     dose_gated_d_prime, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_impact_matched,
-    simulate_input_only_baseline, simulate_layer_selection, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_stack_drift, simulate_three_arm,
-    simulate_wording_arm, simulate_wording_cell, simulate_wording_design, synth_trials,
-    BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, Naming, Responder,
-    SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_stack_drift,
+    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
+    synth_trials, BaselinePredictor, ConfidenceKind, ImpactControl, ImpactResponder, ItemResponder,
+    Naming, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -37,6 +38,11 @@ USAGE:
       Simulate a detector and a null random-direction responder under five
       serving stacks that shift the Yes criterion; report how far mean d' and
       the hit-minus-false-alarm gap move across stacks.
+
+  introscope resample-cluster --out <results.json> [--seed 7] [--items 100] [--k 4] [--reps 200] [--resamples 2000]
+      Simulate a null responder with a fixed per-item yes bias and a true
+      detector, each item sampled k times; compare a trial-level interval with
+      an item-clustered interval.
 
   introscope layer-selection --out <results.json> [--seed 7] [--layers 24] [--n 100] [--reps 200]
       Simulate a null responder and a one-layer introspector scored at the best
@@ -401,6 +407,42 @@ fn run() -> Result<(), String> {
                 k,
                 res[1].margin,
                 blocks.join(",\n"),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "resample-cluster" => {
+            let items = args.number("--items", 100)? as usize;
+            let k = args.number("--k", 4)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let nul =
+                simulate_item_cluster(ItemResponder::NullItemBias, items, k, reps, resamples, seed);
+            let det = simulate_item_cluster(
+                ItemResponder::Detector,
+                items,
+                k,
+                reps,
+                resamples,
+                seed.wrapping_add(50000),
+            );
+            let block = |c: &introscope::ClusterArm| {
+                format!(
+                    "{{\"mean_d_prime\": {:.4}, \"trial_level_excludes_zero_rate\": {:.4}, \"clustered_excludes_zero_rate\": {:.4}}}",
+                    c.mean_d_prime, c.trial_level_excludes_zero_rate, c.clustered_excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"resample-cluster\",\n  \"items_per_arm\": {},\n  \"k\": {},\n  \"reps\": {},\n  \"resamples\": {},\n  \"null_item_bias\": {},\n  \"detector\": {},\n{}",
+                items,
+                k,
+                reps,
+                resamples,
+                block(&nul),
+                block(&det),
                 provenance(
                     started,
                     seed,

@@ -456,3 +456,22 @@ range of mean d' across stacks is 0.05 or more, or the null responder's mean d'
 is farther than 0.05 from 0 under any stack.
 
 This is a simulation with no model queried.
+
+## 2026-11-18T23:28:45Z resample-cluster proposal:314feaa6926c39e5e5cd5826cc92e09c928577f24138004c46e04ed7cdd40956
+
+Hypothesis: with seed 7, 100 items per arm, 4 resamples per item, 200
+replicates and a null responder whose per-item yes probability is drawn from a
+Beta distribution with mean 0.5 and no dependence on injection, the
+trial-level (pseudo-replicated) d' interval excludes zero in at least 0.15 of
+replicates while the item-clustered interval excludes zero in at most 0.08, and
+a true detector with d' 1.0 keeps clustered power of at least 0.80.
+
+Metric: /null_item_bias/trial_level_excludes_zero_rate.
+
+Expected: increases to at least 0.15 (clustered rate stays at or below 0.08).
+
+Falsifier: the null item-bias responder's trial-level excludes-zero rate is
+below 0.15, or its clustered rate is above 0.08, or the true detector's
+clustered power is below 0.80.
+
+This is a simulation with no model queried.

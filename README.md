@@ -291,3 +291,12 @@ d' is stable. The range of mean hit-minus-false-alarm gap is 0.0595, below the
 pre-registered threshold of 0.08, so the hypothesis is falsified. A null
 random-direction responder has a largest absolute mean d' of 0.0061. This is a
 simulation; no model has been queried.
+
+## Resample-cluster simulation
+
+`results/466-resample-cluster.json` simulates 100 items per arm, each sampled 4
+times. A null responder with a per-item yes bias and no dependence on injection
+has a mean d' of 0.0172. Its trial-level interval excludes zero in 0.225 of 200
+replicates and its item-clustered interval in 0.06. A true detector keeps a
+clustered excludes-zero rate of 1.0. This is a simulation; no model has been
+queried.

@@ -1,0 +1,10 @@
+{
+  "kind": "resample-cluster",
+  "items_per_arm": 100,
+  "k": 4,
+  "reps": 200,
+  "resamples": 2000,
+  "null_item_bias": {"mean_d_prime": 0.0172, "trial_level_excludes_zero_rate": 0.2250, "clustered_excludes_zero_rate": 0.0600},
+  "detector": {"mean_d_prime": 0.8971, "trial_level_excludes_zero_rate": 1.0000, "clustered_excludes_zero_rate": 1.0000},
+  "provenance": {"started_at": "2026-11-18T23:28:58Z", "seeds": [7], "command": "target/release/introscope resample-cluster --out results/466-resample-cluster.json --seed 7 --items 100 --k 4 --reps 200 --resamples 2000", "hardware": "linux x86_64", "wall_s": 5.748, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
