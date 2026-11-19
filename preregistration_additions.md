@@ -598,3 +598,23 @@ responder, or a yes-shifted responder whose advantage interval excludes zero
 in more than 0.10 of replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T02:20:46Z relabel-control proposal:d5b8a4d5247ddfc3c79f8d49eaefce411688168f21e904e2df3b99383bb1948a
+
+Hypothesis: with seed 7, 400 self and 400 cross items per arm, 200 replicates
+and a property base rate of 0.80, a privileged-self predictor (self accuracy
+0.90, cross accuracy 0.80) has a mean advantage over the cross-predictor of at
+least 0.08 before relabeling, and after labels are randomized at the same base
+rate its mean advantage falls below 0.02 while the majority-class predictor
+stays within 0.03 of 0.80 accuracy. Predictor errors are drawn so each
+predictor's marginal yes rate equals the base rate.
+
+Metric: /advantage_after_relabel.
+
+Expected: below 0.02 (range -0.02 to 0.02).
+
+Falsifier: a mean advantage after relabeling of 0.02 or more, a mean advantage
+before relabeling below 0.08, or a majority-class accuracy more than 0.03 from
+0.80.
+
+This is a simulation with no model queried.

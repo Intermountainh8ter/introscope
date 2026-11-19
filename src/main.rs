@@ -4,12 +4,12 @@ use introscope::{
     simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
     simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
     simulate_layer_selection, simulate_matched_fpr, simulate_position_artifact,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
-    simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
-    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
+    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
+    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
+    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
+    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -36,6 +36,7 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope relabel-control --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope matched-fpr --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Compare injected-concept, matched-random and yes-shifted responders at a
       fixed false-alarm rate of 0.10.
@@ -654,6 +655,26 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "relabel-control" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let r = simulate_relabel_control(0.90, 0.80, 0.80, n, reps, seed);
+            format!(
+                "  \"kind\": \"relabel-control\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"base_rate\": 0.80,\n  \"advantage_after_relabel\": {:.4},\n  \"advantage_before_relabel\": {:.4},\n  \"majority_accuracy_before\": {:.4},\n  \"majority_accuracy_after\": {:.4},\n{}",
+                n,
+                reps,
+                r.advantage_after,
+                r.advantage_before,
+                r.majority_before,
+                r.majority_after,
                 provenance(
                     started,
                     seed,

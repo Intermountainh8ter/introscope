@@ -366,3 +366,13 @@ responder has a mean advantage of 0.0009 (excludes zero in 0.03 of
 replicates). A yes-shifted responder has a mean advantage of -0.0001 and
 excludes zero in 0.045 of replicates. This is a simulation; no model has been
 queried.
+
+## Relabel-control simulation
+
+`results/500-relabel-control.json` simulates a skewed-label property with base
+rate 0.80 at 400 self and 400 cross items per arm over 200 replicates. A
+privileged-self predictor (self accuracy 0.90, cross accuracy 0.80) has a mean
+advantage of 0.1012 before relabeling and -0.0036 after labels are randomized
+at the same base rate. A majority-class predictor has mean accuracy 0.7987
+before and 0.7983 after. Predictor errors are drawn so each predictor's marginal
+yes rate equals the base rate. This is a simulation; no model has been queried.

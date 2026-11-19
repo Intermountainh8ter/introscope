@@ -2169,3 +2169,65 @@ pub fn simulate_matched_fpr(
         excludes_zero_rate: excl as f64 / r,
     }
 }
+
+/// Mean accuracies from the relabel control.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RelabelControl {
+    pub advantage_before: f64,
+    pub advantage_after: f64,
+    pub majority_before: f64,
+    pub majority_after: f64,
+}
+
+/// Predictions with accuracy `acc` against labels of base rate `base`, errors
+/// chosen so the marginal yes rate of the predictions equals `base`.
+fn marginal_matched_predictions(labels: &[bool], acc: f64, base: f64, rng: &mut Rng) -> Vec<bool> {
+    // base*e1 = (1-base)*e0 and base*e1 + (1-base)*e0 = 1-acc
+    let e1 = (1.0 - acc) / (2.0 * base);
+    let e0 = (1.0 - acc) / (2.0 * (1.0 - base));
+    labels
+        .iter()
+        .map(|&y| y ^ rng.coin(if y { e1 } else { e0 }))
+        .collect()
+}
+
+fn accuracy(pred: &[bool], labels: &[bool]) -> f64 {
+    pred.iter().zip(labels).filter(|(p, y)| p == y).count() as f64 / labels.len() as f64
+}
+
+/// Simulate a skewed-label property. A self-predictor (`self_acc` on `n` self
+/// items), a cross-predictor (`cross_acc` on `n` cross items) and a
+/// majority-class predictor are scored, then scored again against freshly
+/// drawn labels of the same base rate (predictions kept).
+pub fn simulate_relabel_control(
+    self_acc: f64,
+    cross_acc: f64,
+    base: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> RelabelControl {
+    let mut rng = Rng::new(seed);
+    let (mut ab, mut aa, mut mb, mut ma) = (0.0, 0.0, 0.0, 0.0);
+    for _ in 0..reps {
+        let draw = |rng: &mut Rng| -> Vec<bool> { (0..n).map(|_| rng.coin(base)).collect() };
+        let ys = draw(&mut rng);
+        let yc = draw(&mut rng);
+        let ps = marginal_matched_predictions(&ys, self_acc, base, &mut rng);
+        let pc = marginal_matched_predictions(&yc, cross_acc, base, &mut rng);
+        let maj = vec![true; n];
+        ab += accuracy(&ps, &ys) - accuracy(&pc, &yc);
+        mb += accuracy(&maj, &ys);
+        let rs = draw(&mut rng);
+        let rc = draw(&mut rng);
+        aa += accuracy(&ps, &rs) - accuracy(&pc, &rc);
+        ma += accuracy(&maj, &rs);
+    }
+    let r = reps as f64;
+    RelabelControl {
+        advantage_before: ab / r,
+        advantage_after: aa / r,
+        majority_before: mb / r,
+        majority_after: ma / r,
+    }
+}

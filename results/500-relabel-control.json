@@ -1,0 +1,11 @@
+{
+  "kind": "relabel-control",
+  "n_per_arm": 400,
+  "reps": 200,
+  "base_rate": 0.80,
+  "advantage_after_relabel": -0.0036,
+  "advantage_before_relabel": 0.1012,
+  "majority_accuracy_before": 0.7987,
+  "majority_accuracy_after": 0.7983,
+  "provenance": {"started_at": "2026-11-19T02:21:01Z", "seeds": [7], "command": "target/release/introscope relabel-control --seed 7 --n 400 --reps 200 --out results/500-relabel-control.json", "hardware": "linux x86_64", "wall_s": 0.005, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
