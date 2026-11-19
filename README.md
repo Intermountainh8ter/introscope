@@ -389,3 +389,14 @@ question only) has a mean difference of 0.2988 and excludes zero in 1.0 of
 replicates. A mixture responder (control shift 0.15) has a mean difference of
 0.1506 and excludes zero in 0.935 of replicates. This is a simulation; no model
 has been queried.
+
+## Localization-shortcut simulation
+
+`results/502-localization-shortcut.json` simulates 10-sentence localization at
+400 trials per arm and 200 replicates. A shortcut responder that picks the
+steered sentence with probability 0.50 and otherwise picks uniformly has an
+accuracy minus chance of 0.4489, 0.4488 under a changed wording, a mean change
+of -0.0001. A wording-dependent responder has 0.4471 under the original wording
+and -0.0008 under the changed one. A random picker has 0.0025. An above-chance
+localization score alone does not separate a shortcut from introspective
+access. This is a simulation; no model has been queried.

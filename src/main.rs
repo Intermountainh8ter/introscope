@@ -3,7 +3,7 @@ use introscope::{
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_factual_no_control,
     simulate_identify_prior, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_item_cluster, simulate_layer_selection, simulate_matched_fpr,
+    simulate_item_cluster, simulate_layer_selection, simulate_localization, simulate_matched_fpr,
     simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
     simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
     simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
@@ -36,6 +36,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope localization-shortcut --out <results.json> [--seed 7] [--n 400] [--reps 200]
+      Compare a shortcut, a wording-dependent and a random sentence picker on
+      10-sentence localization accuracy minus chance and its change under a
+      wording change.
 
   introscope factual-no-control --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Compare an injection-specific, a global yes-shift and a mixture responder
@@ -661,6 +666,34 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "localization-shortcut" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            // pick probability p for the steered sentence, else uniform over 10
+            let short = simulate_localization(0.50, 0.50, 10, n, reps, seed);
+            let genuine = simulate_localization(0.50, 0.0, 10, n, reps, seed.wrapping_add(1000));
+            let random = simulate_localization(0.0, 0.0, 10, n, reps, seed.wrapping_add(2000));
+            let block = |a: &introscope::LocalizationArm| {
+                format!(
+                    "{{\"localization_accuracy_minus_chance\": {:.4}, \"accuracy_minus_chance_changed_wording\": {:.4}, \"mean_wording_change\": {:.4}}}",
+                    a.accuracy_minus_chance, a.accuracy_minus_chance_changed, a.mean_wording_change
+                )
+            };
+            format!(
+                "  \"kind\": \"localization-shortcut\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"candidates\": 10,\n  \"shortcut_responder\": {},\n  \"wording_dependent_responder\": {},\n  \"random_picker\": {},\n{}",
+                n,
+                reps,
+                block(&short),
+                block(&genuine),
+                block(&random),
                 provenance(
                     started,
                     seed,

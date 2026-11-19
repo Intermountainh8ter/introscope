@@ -1,0 +1,10 @@
+{
+  "kind": "localization-shortcut",
+  "n_per_arm": 400,
+  "reps": 200,
+  "candidates": 10,
+  "shortcut_responder": {"localization_accuracy_minus_chance": 0.4489, "accuracy_minus_chance_changed_wording": 0.4488, "mean_wording_change": -0.0001},
+  "wording_dependent_responder": {"localization_accuracy_minus_chance": 0.4471, "accuracy_minus_chance_changed_wording": -0.0008, "mean_wording_change": -0.4479},
+  "random_picker": {"localization_accuracy_minus_chance": 0.0025, "accuracy_minus_chance_changed_wording": -0.0006, "mean_wording_change": -0.0031},
+  "provenance": {"started_at": "2026-11-19T02:45:01Z", "seeds": [7], "command": "target/release/introscope localization-shortcut --out results/502-localization-shortcut.json --seed 7 --n 400 --reps 200", "hardware": "linux x86_64", "wall_s": 0.006, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

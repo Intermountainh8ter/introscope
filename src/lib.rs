@@ -2291,3 +2291,62 @@ pub fn simulate_factual_no_control(
         excludes_zero_rate: excl as f64 / reps as f64,
     }
 }
+
+/// Result of the localization-shortcut simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LocalizationArm {
+    pub accuracy_minus_chance: f64,
+    pub accuracy_minus_chance_changed: f64,
+    pub mean_wording_change: f64,
+}
+
+/// Simulate sentence localization among `k` candidates. A trial is correct
+/// when the pick equals the steered sentence. `p_orig` and `p_changed` are the
+/// probabilities of picking the steered sentence under the original and the
+/// changed wording; otherwise the pick is uniform over all `k`.
+pub fn simulate_localization(
+    p_orig: f64,
+    p_changed: f64,
+    k: usize,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> LocalizationArm {
+    let mut rng = Rng::new(seed);
+    let chance = 1.0 / k as f64;
+    let (mut a, mut b) = (0.0, 0.0);
+    for _ in 0..reps {
+        let mut acc = |p: f64| -> f64 {
+            let hits = (0..n).filter(|_| rng.coin(p) || rng.coin(chance)).count();
+            hits as f64 / n as f64
+        };
+        a += acc(p_orig) - chance;
+        b += acc(p_changed) - chance;
+    }
+    let r = reps as f64;
+    LocalizationArm {
+        accuracy_minus_chance: a / r,
+        accuracy_minus_chance_changed: b / r,
+        mean_wording_change: (b - a) / r,
+    }
+}
+
+#[cfg(test)]
+mod localization_tests {
+    use super::*;
+
+    #[test]
+    fn shortcut_is_wording_invariant_and_random_is_chance() {
+        let s = simulate_localization(0.5, 0.5, 10, 400, 40, 7);
+        assert!((s.accuracy_minus_chance - 0.45).abs() < 0.03);
+        assert!(s.mean_wording_change.abs() < 0.03);
+        let r = simulate_localization(0.0, 0.0, 10, 400, 40, 9);
+        assert!(r.accuracy_minus_chance.abs() < 0.03);
+    }
+
+    #[test]
+    fn wording_dependent_responder_drops_to_chance() {
+        let g = simulate_localization(0.5, 0.0, 10, 400, 40, 11);
+        assert!(g.mean_wording_change < -0.40);
+    }
+}

@@ -640,3 +640,24 @@ Falsifier: a global-responder mean difference of shifts with absolute value
 global-responder interval-excludes-zero share above 0.10.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T02:44:40Z localization-shortcut proposal:64e91b4e6730b540f406335a6db99eb4c706a7ccc81fbc53d9691cdcda1b4028
+
+Hypothesis: with seed 7, 400 trials per arm, 10 candidate sentences (chance
+0.10) and 200 replicates, a shortcut responder that picks the steered sentence
+with probability 0.50 and otherwise picks uniformly has a mean localization
+accuracy minus chance between 0.40 and 0.50 under both the original and the
+changed wording, with a mean change under the wording change within 0.03 of
+zero, while a random picker has accuracy minus chance within 0.03 of zero. An
+above-chance localization score alone therefore does not separate a shortcut
+from introspective access.
+
+Metric: /shortcut_responder/localization_accuracy_minus_chance.
+
+Expected: between 0.40 and 0.50 (about 0.45).
+
+Falsifier: a shortcut-responder accuracy minus chance outside 0.40 to 0.50, an
+absolute mean change under the wording change of 0.03 or more, or a
+random-picker accuracy minus chance with absolute value 0.03 or more.
+
+This is a simulation with no model queried.
