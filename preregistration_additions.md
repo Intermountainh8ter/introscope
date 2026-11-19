@@ -558,3 +558,22 @@ gap is not below 0, or any degenerate responder has a mean absolute gap above
 0.05.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T00:16:45Z template-gain proposal:1fa5c16e367d375729b52dee4a5a936beb53886f678b254672dd9561eddc17b3
+
+Hypothesis: with seed 7, 400 signal and 400 noise trials per arm, 200
+replicates and three prompt templates with true d' of 1.3, 1.0 and 0.7, the
+range of mean d' across templates is at least 10 times the range of mean d'
+across three same-template seed batches (no-drift null), and a
+random-direction responder keeps a mean d' within 0.05 of 0 under every
+template.
+
+Metric: /template_audit/detection_spread_over_seed_spread.
+
+Expected: at least 10 (range 10 to 1000).
+
+Falsifier: the across-template range of mean d' is below 10 times the
+same-template seed-batch range, or the null responder's mean d' is farther
+than 0.05 from 0 under any template.
+
+This is a simulation with no model queried.

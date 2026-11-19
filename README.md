@@ -345,3 +345,12 @@ chance-corrected gap of 0.2607 (AUROC 0.7608, identification accuracy 0.1002).
 A content-aware responder has a mean gap of -0.4409. The largest mean absolute
 gap among the always-yes, always-no and fair-coin responders is 0.0197. This is
 a simulation; no model has been queried.
+
+## Template-gain simulation
+
+`results/477-template-gain.json` simulates three prompt templates that change
+true d' (1.3, 1.0 and 0.7) at 400 signal and 400 noise trials per arm, 200
+replicates. The range of mean d' across templates is 0.5964, against 0.0051
+across three same-template seed batches, a ratio of 116.1185. A
+random-direction responder keeps a mean d' within 0.0055 of 0 under every
+template. This is a simulation; no model has been queried.

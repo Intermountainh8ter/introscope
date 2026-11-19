@@ -36,6 +36,12 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope template-gain --out <results.json> [--seed 7] [--n 400] [--reps 200]
+      Simulate three prompt templates that change true d' (1.3, 1.0, 0.7) and
+      compare the spread of mean d' across templates with the spread across
+      three same-template seed batches; a random-direction null runs per
+      template.
+
   introscope stack-drift --out <results.json> [--seed 7] [--n 400] [--reps 200] [--resamples 2000]
       Simulate a detector and a null random-direction responder under five
       serving stacks that shift the Yes criterion; report how far mean d' and
@@ -644,6 +650,72 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "template-gain" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let dprimes = [1.3, 1.0, 0.7];
+            let cells: Vec<(introscope::StackCell, introscope::StackCell)> = dprimes
+                .iter()
+                .enumerate()
+                .map(|(k, d)| {
+                    (
+                        simulate_stack_drift(*d, 0.0, n, reps, seed.wrapping_add(1000 * k as u64)),
+                        simulate_stack_drift(
+                            0.0,
+                            0.0,
+                            n,
+                            reps,
+                            seed.wrapping_add(50000 + 1000 * k as u64),
+                        ),
+                    )
+                })
+                .collect();
+            let batches: Vec<f64> = (0..3u64)
+                .map(|b| {
+                    simulate_stack_drift(1.0, 0.0, n, reps, seed.wrapping_add(90000 + 1000 * b))
+                        .dprime_mean
+                })
+                .collect();
+            let range = |v: Vec<f64>| {
+                v.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+                    - v.iter().cloned().fold(f64::INFINITY, f64::min)
+            };
+            let det_range = range(cells.iter().map(|c| c.0.dprime_mean).collect());
+            let seed_range = range(batches.clone());
+            let ratio = det_range / seed_range.max(1e-9);
+            let null_max = cells
+                .iter()
+                .map(|c| c.1.dprime_mean.abs())
+                .fold(0.0, f64::max);
+            let rows: Vec<String> = dprimes
+                .iter()
+                .zip(cells.iter())
+                .map(|(d, (a, z))| {
+                    format!(
+                        "    {{\"true_dprime\": {:.1}, \"detector_dprime_mean\": {:.4}, \"null_dprime_mean\": {:.4}}}",
+                        d, a.dprime_mean, z.dprime_mean
+                    )
+                })
+                .collect();
+            let bl: Vec<String> = batches.iter().map(|b| format!("{:.4}", b)).collect();
+            format!(
+                "  \"kind\": \"template-gain\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"template_audit\": {{\n    \"detection_range_across_templates\": {:.4},\n    \"seed_batch_range\": {:.4},\n    \"detection_spread_over_seed_spread\": {:.4},\n    \"null_max_abs_dprime_mean\": {:.4},\n    \"seed_batch_dprime_means\": [{}]\n  }},\n  \"templates\": [\n{}\n  ],\n{}",
+                n,
+                reps,
+                det_range,
+                seed_range,
+                ratio,
+                null_max,
+                bl.join(", "),
+                rows.join(",\n"),
                 provenance(
                     started,
                     seed,
