@@ -2481,3 +2481,56 @@ mod perspective_tests {
         assert!(p.third_person_reproduction_share.abs() <= 0.10);
     }
 }
+
+/// Result of the authorship-stratified simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AuthorshipArm {
+    pub pooled_authorship_gap: f64,
+    pub within_stratum_authorship_gap: f64,
+}
+
+/// Simulate authorship claims on own versus prefilled texts. A latent surface
+/// feature is present with probability `feat_own` on own texts and
+/// `feat_pre` on prefilled texts. `claim[f][o]` is the claim probability for
+/// feature `f` (0/1) and authorship `o` (0 prefilled, 1 own). The within-stratum
+/// gap is the mean of the two per-stratum own-minus-prefilled gaps.
+pub fn simulate_authorship_stratified(
+    feat_own: f64,
+    feat_pre: f64,
+    claim: [[f64; 2]; 2],
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> AuthorshipArm {
+    let mut rng = Rng::new(seed);
+    let (mut pooled, mut within) = (0.0, 0.0);
+    for _ in 0..reps {
+        // counts[o][f] = (texts, claims)
+        let mut counts = [[(0usize, 0usize); 2]; 2];
+        for o in 0..2 {
+            let pf = if o == 1 { feat_own } else { feat_pre };
+            for _ in 0..n {
+                let f = rng.coin(pf) as usize;
+                let c = rng.coin(claim[f][o]) as usize;
+                counts[o][f].0 += 1;
+                counts[o][f].1 += c;
+            }
+        }
+        let rate = |o: usize, f: usize| {
+            let (t, c) = counts[o][f];
+            if t == 0 {
+                0.0
+            } else {
+                c as f64 / t as f64
+            }
+        };
+        let pooled_rate = |o: usize| (counts[o][0].1 + counts[o][1].1) as f64 / n as f64;
+        pooled += pooled_rate(1) - pooled_rate(0);
+        within += ((rate(1, 0) - rate(0, 0)) + (rate(1, 1) - rate(0, 1))) / 2.0;
+    }
+    let k = reps as f64;
+    AuthorshipArm {
+        pooled_authorship_gap: pooled / k,
+        within_stratum_authorship_gap: within / k,
+    }
+}

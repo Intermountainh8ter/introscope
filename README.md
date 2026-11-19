@@ -425,3 +425,14 @@ wording has a first-person detection of 0.5025 and a third-person detection of
 -0.0017, a share of -0.0033. A first-person score alone does not separate the
 two; the third-person control does. This is a simulation; no model has been
 queried.
+
+## Authorship-stratified simulation
+
+`results/507-authorship-stratified.json` simulates claims of authorship on own
+versus prefilled texts at 400 texts per arm and 200 replicates, with a latent
+surface feature correlated with authorship. A content-guess responder that
+claims authorship from the feature alone has a pooled own-minus-prefilled gap
+of 0.3600 and a within-stratum gap of 0.0024. An authorship-signal responder has
+a pooled gap of 0.4996 and a within-stratum gap of 0.4988. A pooled gap alone
+does not separate the two; stratifying on the surface feature does. This is a
+simulation; no model has been queried.

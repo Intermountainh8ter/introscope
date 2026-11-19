@@ -703,3 +703,23 @@ Falsifier: a person-agnostic third-person reproduction share below 0.90, or a
 privileged-self reproduction share with absolute value above 0.10.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T03:10:47Z authorship-stratified proposal:77912d76fbc78d8934de226f0c08004da1b68d4868823959ba56bdbe044593db
+
+Hypothesis: with seed 7, 400 texts per arm (own and prefilled), 200 replicates,
+and a binary latent surface feature present with probability 0.8 on own texts
+and 0.2 on prefilled texts, a content-guess responder that claims authorship
+with probability 0.8 when the feature is present and 0.2 when absent has a
+pooled own-minus-prefilled claim-rate gap of at least 0.30 but a within-stratum
+gap (mean of the two per-stratum gaps) with magnitude below 0.05, while an
+authorship-signal responder (claims with probability 0.75 on own and 0.25 on
+prefilled, whatever the feature) keeps a within-stratum gap of at least 0.30.
+
+Metric: /content_guess_responder/within_stratum_authorship_gap.
+
+Expected: magnitude below 0.05 (range -0.05 to 0.05), pooled gap at least 0.30.
+
+Falsifier: a content-guess within-stratum gap with absolute value 0.05 or more,
+or an authorship-signal within-stratum gap below 0.30.
+
+This is a simulation with no model queried.

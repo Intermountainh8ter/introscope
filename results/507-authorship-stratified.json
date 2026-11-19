@@ -1,0 +1,8 @@
+{
+  "kind": "authorship-stratified",
+  "n_per_arm": 400,
+  "reps": 200,
+  "content_guess_responder": {"pooled_authorship_gap": 0.3600, "within_stratum_authorship_gap": 0.0024},
+  "authorship_signal_responder": {"pooled_authorship_gap": 0.4996, "within_stratum_authorship_gap": 0.4988},
+  "provenance": {"started_at": "2026-11-19T03:11:03Z", "seeds": [7], "command": "target/release/introscope authorship-stratified --seed 7 --n 400 --reps 200 --out results/507-authorship-stratified.json", "hardware": "linux x86_64", "wall_s": 0.008, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
