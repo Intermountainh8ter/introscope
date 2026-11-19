@@ -376,3 +376,16 @@ advantage of 0.1012 before relabeling and -0.0036 after labels are randomized
 at the same base rate. A majority-class predictor has mean accuracy 0.7987
 before and 0.7983 after. Predictor errors are drawn so each predictor's marginal
 yes rate equals the base rate. This is a simulation; no model has been queried.
+
+## Factual-no-control simulation
+
+`results/501-factual-no-control.json` simulates a yes-rate shift under injection
+on the introspection question and on a factual-no control asked under the same
+injection, at 400 trials per arm, 200 replicates and a baseline yes rate of
+0.20. A global yes-shift responder (shift 0.30 on both questions) has a mean
+difference of shifts of 0.0046 and an interval that excludes zero in 0.05 of
+replicates. An injection-specific responder (shift 0.30 on the introspection
+question only) has a mean difference of 0.2988 and excludes zero in 1.0 of
+replicates. A mixture responder (control shift 0.15) has a mean difference of
+0.1506 and excludes zero in 0.935 of replicates. This is a simulation; no model
+has been queried.

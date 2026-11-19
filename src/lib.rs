@@ -2231,3 +2231,63 @@ pub fn simulate_relabel_control(
         majority_after: ma / r,
     }
 }
+
+/// Result of the factual-no-control simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FactualNoArm {
+    pub intro_shift: f64,
+    pub control_shift: f64,
+    pub mean_difference_of_shifts: f64,
+    /// Fraction of replicates whose bootstrap interval excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate a yes-rate shift under injection on the introspection question and
+/// on a factual-no control asked under the same injection. Uninjected yes
+/// probability is `base` on both questions; under injection it is
+/// `base + intro_shift` and `base + control_shift`. The statistic is the
+/// introspection shift minus the control shift.
+pub fn simulate_factual_no_control(
+    base: f64,
+    intro_shift: f64,
+    control_shift: f64,
+    n: usize,
+    reps: usize,
+    resamples: usize,
+    seed: u64,
+) -> FactualNoArm {
+    let mut rng = Rng::new(seed);
+    let (mut sum, mut excl) = (0.0, 0usize);
+    for rep in 0..reps {
+        let mut cell = |p: f64| -> Vec<bool> { (0..n).map(|_| rng.coin(p)).collect() };
+        let cells = [
+            cell(base + intro_shift),
+            cell(base),
+            cell(base + control_shift),
+            cell(base),
+        ];
+        let diff_of = |idx: &[usize]| {
+            let rate = |k: usize| {
+                idx[k * n..(k + 1) * n]
+                    .iter()
+                    .filter(|&&i| cells[k][i % n])
+                    .count() as f64
+                    / n as f64
+            };
+            (rate(0) - rate(1)) - (rate(2) - rate(3))
+        };
+        let all: Vec<usize> = (0..4 * n).collect();
+        let diff = diff_of(&all);
+        let ci = bootstrap_ci(4 * n, diff_of, resamples, seed.wrapping_add(rep as u64 + 1));
+        sum += diff;
+        if ci.0 > 0.0 || ci.1 < 0.0 {
+            excl += 1;
+        }
+    }
+    FactualNoArm {
+        intro_shift,
+        control_shift,
+        mean_difference_of_shifts: sum / reps as f64,
+        excludes_zero_rate: excl as f64 / reps as f64,
+    }
+}

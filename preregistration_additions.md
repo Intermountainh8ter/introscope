@@ -618,3 +618,25 @@ before relabeling below 0.08, or a majority-class accuracy more than 0.03 from
 0.80.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T02:31:00Z factual-no-control proposal:c8d016e5adabc729cda81d728a9d9b9dfc90dff6a09a583621d25b451be1fe34
+
+Hypothesis: with seed 7, 400 injected and 400 uninjected trials per arm and 200
+replicates, a global yes-shift responder (yes probability raised by 0.30 on
+both the introspection question and the factual-no control under injection,
+baseline 0.20) has a mean difference of shifts (introspection minus control)
+within 0.03 of zero, while an injection-specific responder (shift 0.30 on the
+introspection question only) has a mean difference of shifts of at least 0.25.
+The bootstrap interval of the difference excludes zero in at least 0.95 of
+replicates for the injection-specific responder and in at most 0.10 for the
+global responder.
+
+Metric: /global_shift_responder/mean_difference_of_shifts.
+
+Expected: near zero, within 0.03 of zero (range -0.03 to 0.03).
+
+Falsifier: a global-responder mean difference of shifts with absolute value
+0.03 or more, an injection-specific mean difference below 0.25, or a
+global-responder interval-excludes-zero share above 0.10.
+
+This is a simulation with no model queried.

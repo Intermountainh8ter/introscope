@@ -1,0 +1,10 @@
+{
+  "kind": "factual-no-control",
+  "n_per_arm": 400,
+  "reps": 200,
+  "baseline_yes_rate": 0.20,
+  "global_shift_responder": {"intro_shift": 0.30, "control_shift": 0.30, "mean_difference_of_shifts": 0.0046, "excludes_zero_rate": 0.0500},
+  "injection_specific_responder": {"intro_shift": 0.30, "control_shift": 0.00, "mean_difference_of_shifts": 0.2988, "excludes_zero_rate": 1.0000},
+  "mixture_responder": {"intro_shift": 0.30, "control_shift": 0.15, "mean_difference_of_shifts": 0.1506, "excludes_zero_rate": 0.9350},
+  "provenance": {"started_at": "2026-11-19T02:40:35Z", "seeds": [7], "command": "target/release/introscope factual-no-control --seed 7 --n 400 --reps 200 --out results/501-factual-no-control.json", "hardware": "linux x86_64", "wall_s": 2.105, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

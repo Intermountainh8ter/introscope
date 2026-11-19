@@ -1,15 +1,16 @@
 use introscope::{
     dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
-    simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
-    simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
-    simulate_layer_selection, simulate_matched_fpr, simulate_position_artifact,
-    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
-    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
-    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
-    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
-    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_detect_identify, simulate_detect_power, simulate_factual_no_control,
+    simulate_identify_prior, simulate_impact_matched, simulate_input_only_baseline,
+    simulate_item_cluster, simulate_layer_selection, simulate_matched_fpr,
+    simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
+    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
+    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -35,6 +36,11 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope factual-no-control --out <results.json> [--seed 7] [--n 400] [--reps 200]
+      Compare an injection-specific, a global yes-shift and a mixture responder
+      on the shift on the introspection question minus the shift on a
+      factual-no control asked under the same injection.
 
   introscope relabel-control --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope matched-fpr --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -655,6 +661,49 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "factual-no-control" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let spec = simulate_factual_no_control(0.20, 0.30, 0.0, n, reps, 200, seed);
+            let glob = simulate_factual_no_control(
+                0.20,
+                0.30,
+                0.30,
+                n,
+                reps,
+                200,
+                seed.wrapping_add(1000),
+            );
+            let mix = simulate_factual_no_control(
+                0.20,
+                0.30,
+                0.15,
+                n,
+                reps,
+                200,
+                seed.wrapping_add(2000),
+            );
+            let block = |a: &introscope::FactualNoArm| {
+                format!(
+                    "{{\"intro_shift\": {:.2}, \"control_shift\": {:.2}, \"mean_difference_of_shifts\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    a.intro_shift, a.control_shift, a.mean_difference_of_shifts, a.excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"factual-no-control\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"baseline_yes_rate\": 0.20,\n  \"global_shift_responder\": {},\n  \"injection_specific_responder\": {},\n  \"mixture_responder\": {},\n{}",
+                n,
+                reps,
+                block(&glob),
+                block(&spec),
+                block(&mix),
                 provenance(
                     started,
                     seed,
