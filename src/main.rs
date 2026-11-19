@@ -4,13 +4,14 @@ use introscope::{
     simulate_detect_identify, simulate_detect_power, simulate_factual_no_control,
     simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
     simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
-    simulate_localization, simulate_matched_fpr, simulate_position_artifact,
-    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
-    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
-    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
-    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
-    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_localization, simulate_matched_fpr, simulate_perspective_swap,
+    simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
+    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
+    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -37,6 +38,7 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Compare a gap-compression responder and a true detector on the clean-to-
       injected yes-rate rise and the injected-minus-random-direction difference.
@@ -670,6 +672,37 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "perspective-swap" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let agn = simulate_perspective_swap((0.75, 0.25), (0.75, 0.25), n, reps, seed);
+            let own = simulate_perspective_swap(
+                (0.75, 0.25),
+                (0.5, 0.5),
+                n,
+                reps,
+                seed.wrapping_add(1000),
+            );
+            let block = |a: &introscope::PerspectiveArm| {
+                format!(
+                    "{{\"first_person_detection\": {:.4}, \"third_person_detection\": {:.4}, \"third_person_reproduction_share\": {:.4}}}",
+                    a.first_person_detection, a.third_person_detection, a.third_person_reproduction_share
+                )
+            };
+            format!(
+                "  \"kind\": \"perspective-swap\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"person_agnostic_responder\": {},\n  \"privileged_self_responder\": {},\n{}",
+                n,
+                reps,
+                block(&agn),
+                block(&own),
                 provenance(
                     started,
                     seed,

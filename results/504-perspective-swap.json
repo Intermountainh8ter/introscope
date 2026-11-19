@@ -1,0 +1,8 @@
+{
+  "kind": "perspective-swap",
+  "n_per_arm": 400,
+  "reps": 200,
+  "person_agnostic_responder": {"first_person_detection": 0.4998, "third_person_detection": 0.4990, "third_person_reproduction_share": 0.9983},
+  "privileged_self_responder": {"first_person_detection": 0.5025, "third_person_detection": -0.0017, "third_person_reproduction_share": -0.0033},
+  "provenance": {"started_at": "2026-11-19T02:59:15Z", "seeds": [7], "command": "target/release/introscope perspective-swap --out results/504-perspective-swap.json --seed 7 --n 400 --reps 200", "hardware": "linux x86_64", "wall_s": 0.005, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

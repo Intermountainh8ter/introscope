@@ -683,3 +683,23 @@ true-detector injected-minus-random difference below 0.25.
 
 This is a simulation with no model queried. The true detector adds 2.0 to each
 item's logit gap under injection only.
+
+## 2026-11-19T02:58:59Z perspective-swap proposal:0d3caa44888b7d8775bb6c0548fb9f9f0a42f040fbc2cf221d5ca09543c073e1
+
+Hypothesis: with seed 7, 400 trials per arm and 200 replicates, a
+person-agnostic responder (hit probability 0.75, false-alarm probability 0.25
+under both first- and third-person wording) has a third-person-to-first-person
+detection ratio (hit minus false-alarm rate) of at least 0.90, while a
+privileged-self responder that shifts only under first-person wording (hit
+0.75, false-alarm 0.25 first-person; 0.50 and 0.50 third-person) has a ratio
+within 0.10 of zero. A first-person detection score alone cannot separate the
+two; the third-person control does.
+
+Metric: /person_agnostic_responder/third_person_reproduction_share.
+
+Expected: rises to at least 0.90 (range 0.90 to 1.10).
+
+Falsifier: a person-agnostic third-person reproduction share below 0.90, or a
+privileged-self reproduction share with absolute value above 0.10.
+
+This is a simulation with no model queried.

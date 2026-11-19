@@ -2425,3 +2425,59 @@ mod compression_tests {
         assert!(d.injected_minus_random_yes_rate >= 0.25);
     }
 }
+
+/// Result of the perspective-swap simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PerspectiveArm {
+    pub first_person_detection: f64,
+    pub third_person_detection: f64,
+    pub third_person_reproduction_share: f64,
+}
+
+/// Simulate detection (hit rate minus false-alarm rate) under first- and
+/// third-person wording. `first` and `third` are (hit, false-alarm)
+/// probabilities. The share is third-person detection over first-person
+/// detection, both averaged over `reps`; `n` trials per arm.
+pub fn simulate_perspective_swap(
+    first: (f64, f64),
+    third: (f64, f64),
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> PerspectiveArm {
+    let mut rng = Rng::new(seed);
+    let (mut d1, mut d3) = (0.0, 0.0);
+    for _ in 0..reps {
+        let mut det = |(h, f): (f64, f64)| -> f64 {
+            let hits = (0..n).filter(|_| rng.coin(h)).count();
+            let fas = (0..n).filter(|_| rng.coin(f)).count();
+            (hits as f64 - fas as f64) / n as f64
+        };
+        d1 += det(first);
+        d3 += det(third);
+    }
+    let r = reps as f64;
+    let (d1, d3) = (d1 / r, d3 / r);
+    PerspectiveArm {
+        first_person_detection: d1,
+        third_person_detection: d3,
+        third_person_reproduction_share: if d1.abs() > 1e-12 { d3 / d1 } else { 0.0 },
+    }
+}
+
+#[cfg(test)]
+mod perspective_tests {
+    use super::*;
+
+    #[test]
+    fn agnostic_reproduces_in_third_person() {
+        let a = simulate_perspective_swap((0.75, 0.25), (0.75, 0.25), 400, 40, 7);
+        assert!(a.third_person_reproduction_share >= 0.90);
+    }
+
+    #[test]
+    fn first_person_only_does_not_reproduce() {
+        let p = simulate_perspective_swap((0.75, 0.25), (0.5, 0.5), 400, 40, 9);
+        assert!(p.third_person_reproduction_share.abs() <= 0.10);
+    }
+}

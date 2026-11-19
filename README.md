@@ -413,3 +413,15 @@ yes rate of 0.2793, a rise of 0.1234, but a matched random direction gives
 difference of 0.3438. A clean-versus-injected score alone does not separate
 compression from detection; the matched random direction does. This is a
 simulation; no model has been queried.
+
+## Perspective-swap simulation
+
+`results/504-perspective-swap.json` simulates detection (hit rate minus
+false-alarm rate) under first- and third-person wording at 400 trials per arm
+and 200 replicates. A person-agnostic responder has a first-person detection of
+0.4998 and a third-person detection of 0.499, a third-person reproduction share
+of 0.9983. A privileged-self responder that shifts only under first-person
+wording has a first-person detection of 0.5025 and a third-person detection of
+-0.0017, a share of -0.0033. A first-person score alone does not separate the
+two; the third-person control does. This is a simulation; no model has been
+queried.
