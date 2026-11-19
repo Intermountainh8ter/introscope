@@ -5,7 +5,7 @@ use introscope::{
     simulate_detect_power, simulate_explanation_faithfulness, simulate_factual_no_control,
     simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
     simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
-    simulate_localization, simulate_matched_fpr, simulate_parse_censoring,
+    simulate_localization, simulate_matched_fpr, simulate_null_power, simulate_parse_censoring,
     simulate_perspective_swap, simulate_position_artifact, simulate_prime_sweep,
     simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
     simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
@@ -43,6 +43,7 @@ USAGE:
   introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope parse-censoring --out <results.json> [--seed 7] [--n 400] [--reps 200]
+  introscope null-power --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope prime-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -803,6 +804,37 @@ fn run() -> Result<(), String> {
                 reps,
                 s.max_parsed_only_inflation,
                 s.max_abs_all_replies_gap,
+                points,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "null-power" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let rates = [0.005, 0.01, 0.02, 0.03, 0.04, 0.05];
+            let s = simulate_null_power(&rates, n, reps, seed);
+            let points = s
+                .points
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{{\"true_rate\": {:.3}, \"zero_probability\": {:.4}, \"analytic_zero_probability\": {:.4}}}",
+                        p.true_rate, p.zero_probability, p.analytic_zero_probability
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "  \"kind\": \"null-power\",\n  \"n_per_replicate\": {},\n  \"reps\": {},\n  \"zero_detection_probability_at_true_rate_1pct\": {:.4},\n  \"trials_for_zero_upper_bound_below_1pct\": {},\n  \"sweep\": [{}],\n{}",
+                n,
+                reps,
+                s.zero_probability_at_1pct,
+                s.trials_for_upper_bound_below_1pct,
                 points,
                 provenance(
                     started,

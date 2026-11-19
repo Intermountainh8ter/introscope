@@ -1,0 +1,9 @@
+{
+  "kind": "null-power",
+  "n_per_replicate": 400,
+  "reps": 200,
+  "zero_detection_probability_at_true_rate_1pct": 0.0250,
+  "trials_for_zero_upper_bound_below_1pct": 299,
+  "sweep": [{"true_rate": 0.005, "zero_probability": 0.1200, "analytic_zero_probability": 0.1347}, {"true_rate": 0.010, "zero_probability": 0.0250, "analytic_zero_probability": 0.0180}, {"true_rate": 0.020, "zero_probability": 0.0000, "analytic_zero_probability": 0.0003}, {"true_rate": 0.030, "zero_probability": 0.0000, "analytic_zero_probability": 0.0000}, {"true_rate": 0.040, "zero_probability": 0.0000, "analytic_zero_probability": 0.0000}, {"true_rate": 0.050, "zero_probability": 0.0000, "analytic_zero_probability": 0.0000}],
+  "provenance": {"started_at": "2026-11-19T04:01:59Z", "seeds": [7], "command": "target/release/introscope null-power --seed 7 --n 400 --reps 200 --out results/512-null-power.json", "hardware": "linux x86_64", "wall_s": 0.001, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

@@ -465,3 +465,12 @@ Scoring parsed replies only gives a maximum hit-minus-false-alarm gap of 0.1699
 over the failure-rate grid; counting unparseable replies as no keeps the
 largest absolute gap at 0.0054. This is a simulation; no model has been
 queried.
+
+## Null-power simulation
+
+`results/512-null-power.json` simulates how often an always-no-looking null
+replication of 400 trials sees zero detections when the true detection rate is
+not zero. At a true rate of 1% the share of 200 replicates with zero detections
+is 0.0250 (analytic 0.0180); at 0.5% it is 0.1200 (analytic 0.1347). Zero
+detections give a 95% upper bound below 1% only from 299 trials. This is a
+simulation; no model has been queried.

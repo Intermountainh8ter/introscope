@@ -801,3 +801,21 @@ Falsifier: a maximum parsed-only inflation below 0.15, or an all-replies gap
 with absolute value above 0.03 at any failure rate.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T04:01:38Z null-power proposal:1a2ab7ed5614027ce3198b1abcfddd89d42752bd11e8864845f07237d39ae2e5
+
+Hypothesis: with seed 7, 400 trials per replicate and 200 replicates, a
+responder with true detection rate 1% shows zero detections in between 0.01
+and 0.05 of replicates (analytic value 0.99^400, about 0.018), so a result of
+0 detections in 400 trials is compatible with a 1% true rate in a non-trivial
+share of replicates. The grid covers true rates 0.5% to 5%; an always-no
+responder is the 0% reference.
+
+Metric: /zero_detection_probability_at_true_rate_1pct.
+
+Expected: at least 0.01 and at most 0.05.
+
+Falsifier: a zero-detection probability at a true rate of 1% below 0.01 or
+above 0.05 over 200 seeded replicates.
+
+This is a simulation with no model queried.

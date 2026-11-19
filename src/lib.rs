@@ -2869,3 +2869,76 @@ mod parse_censoring_tests {
         assert!(s.points[0].parsed_only_gap.abs() <= 0.03);
     }
 }
+
+/// One grid point of the null-power sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NullPowerPoint {
+    pub true_rate: f64,
+    pub zero_probability: f64,
+    pub analytic_zero_probability: f64,
+}
+
+/// Result of the null-power sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NullPower {
+    pub points: Vec<NullPowerPoint>,
+    pub zero_probability_at_1pct: f64,
+    pub trials_for_upper_bound_below_1pct: usize,
+}
+
+/// Smallest trial count at which zero detections give a one-sided 95% upper
+/// bound (exact binomial) below `bound`: the least n with (1 - bound)^n <= 0.05.
+pub fn trials_for_zero_bound(bound: f64) -> usize {
+    let mut n = 1usize;
+    while (1.0 - bound).powi(n as i32) > 0.05 {
+        n += 1;
+    }
+    n
+}
+
+/// For each true detection rate, the share of `reps` replicates of `n` trials
+/// with zero detections, beside the analytic value (1 - rate)^n.
+pub fn simulate_null_power(rates: &[f64], n: usize, reps: usize, seed: u64) -> NullPower {
+    let mut rng = Rng::new(seed);
+    let mut points = Vec::with_capacity(rates.len());
+    for &true_rate in rates {
+        let zeros = (0..reps)
+            .filter(|_| (0..n).all(|_| !rng.coin(true_rate)))
+            .count();
+        points.push(NullPowerPoint {
+            true_rate,
+            zero_probability: zeros as f64 / reps as f64,
+            analytic_zero_probability: (1.0 - true_rate).powi(n as i32),
+        });
+    }
+    let zero_probability_at_1pct = points
+        .iter()
+        .find(|p| (p.true_rate - 0.01).abs() < 1e-12)
+        .map_or(f64::NAN, |p| p.zero_probability);
+    NullPower {
+        points,
+        zero_probability_at_1pct,
+        trials_for_upper_bound_below_1pct: trials_for_zero_bound(0.01),
+    }
+}
+
+#[cfg(test)]
+mod null_power_tests {
+    use super::*;
+
+    #[test]
+    fn one_percent_zero_share_near_analytic() {
+        let s = simulate_null_power(&[0.005, 0.01, 0.05], 400, 200, 7);
+        assert!(s.zero_probability_at_1pct >= 0.0 && s.zero_probability_at_1pct <= 0.1);
+        assert!(s.points[2].zero_probability <= s.points[0].zero_probability);
+    }
+
+    #[test]
+    fn zero_bound_trial_count() {
+        assert_eq!(trials_for_zero_bound(0.01), 299);
+        assert_eq!(
+            simulate_null_power(&[0.0], 50, 10, 1).points[0].zero_probability,
+            1.0
+        );
+    }
+}
