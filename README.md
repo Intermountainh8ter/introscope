@@ -445,3 +445,13 @@ replicates. A surface-cue confabulator has accuracy 0.8991 when the visible cue
 matches the hidden cause and 0.5030 when it is decorrelated, a drop of 0.3962.
 A true-cause responder has accuracy 0.8991 and 0.8995, a drop of -0.0004. This
 is a simulation; no model has been queried.
+
+## Delegation-game simulation
+
+`results/509-delegation-game.json` simulates a delegate-or-answer decision at
+400 items per arm and 200 replicates, scoring the correlation between
+delegating and answering incorrectly. A surface-cue responder has a correlation
+of 0.7984 when the visible difficulty cue tracks incorrectness and 0.0060 when
+it is decorrelated, a drop of 0.7924. An internal-confidence responder has
+0.6777 and 0.6816, a drop of -0.0039. This is a simulation; no model has been
+queried.

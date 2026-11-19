@@ -1,0 +1,8 @@
+{
+  "kind": "delegation-game",
+  "n_per_arm": 400,
+  "reps": 200,
+  "surface_cue_responder": {"correlation_correlated": 0.7984, "correlation_decorrelated": 0.0060, "correlation_drop_when_cue_decorrelated": 0.7924},
+  "internal_confidence_responder": {"correlation_correlated": 0.6777, "correlation_decorrelated": 0.6816, "correlation_drop_when_cue_decorrelated": -0.0039},
+  "provenance": {"started_at": "2026-11-19T03:19:31Z", "seeds": [7], "command": "target/release/introscope delegation-game --seed 7 --n 400 --reps 200 --out results/509-delegation-game.json", "hardware": "linux x86_64", "wall_s": 0.017, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

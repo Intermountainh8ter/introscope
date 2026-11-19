@@ -2607,3 +2607,87 @@ mod faithfulness_tests {
         assert!(a.counterfactual_accuracy_drop_when_cue_decorrelated.abs() < 0.03);
     }
 }
+
+/// Result of the delegation-game simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DelegationArm {
+    pub correlation_correlated: f64,
+    pub correlation_decorrelated: f64,
+    pub correlation_drop_when_cue_decorrelated: f64,
+}
+
+/// Simulate a delegate-or-answer decision. Each item is incorrect with
+/// probability 0.5; the visible difficulty cue equals incorrectness with
+/// probability `match_corr` (correlated arm) or `match_decorr` (decorrelated
+/// arm). A surface-cue responder delegates iff the cue is 1. An
+/// internal-confidence responder delegates iff its latent confidence (0.5 when
+/// it would be correct, -0.5 when not, plus normal noise of sd `noise`) is
+/// negative. The score is the Pearson correlation between delegating and
+/// being incorrect, averaged over replicates.
+pub fn simulate_delegation_game(
+    internal: bool,
+    noise: f64,
+    match_corr: f64,
+    match_decorr: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> DelegationArm {
+    let mut rng = Rng::new(seed);
+    let (mut c_sum, mut d_sum) = (0.0, 0.0);
+    for _ in 0..reps {
+        let mut run = |m: f64| -> f64 {
+            let (mut sd, mut si, mut sdi) = (0.0f64, 0.0f64, 0.0f64);
+            for _ in 0..n {
+                let incorrect = rng.coin(0.5);
+                let cue = if rng.coin(m) { incorrect } else { !incorrect };
+                let delegate = if internal {
+                    let base = if incorrect { -0.5 } else { 0.5 };
+                    base + noise * rng.normal() < 0.0
+                } else {
+                    cue
+                };
+                let (d, i) = (delegate as u8 as f64, incorrect as u8 as f64);
+                sd += d;
+                si += i;
+                sdi += d * i;
+            }
+            let nf = n as f64;
+            let (md, mi) = (sd / nf, si / nf);
+            let cov = sdi / nf - md * mi;
+            let denom = (md * (1.0 - md) * mi * (1.0 - mi)).sqrt();
+            if denom > 0.0 {
+                cov / denom
+            } else {
+                0.0
+            }
+        };
+        c_sum += run(match_corr);
+        d_sum += run(match_decorr);
+    }
+    let r = reps as f64;
+    let (c, d) = (c_sum / r, d_sum / r);
+    DelegationArm {
+        correlation_correlated: c,
+        correlation_decorrelated: d,
+        correlation_drop_when_cue_decorrelated: c - d,
+    }
+}
+
+#[cfg(test)]
+mod delegation_tests {
+    use super::*;
+
+    #[test]
+    fn surface_cue_drops_when_decorrelated() {
+        let a = simulate_delegation_game(false, 0.0, 0.9, 0.5, 400, 40, 7);
+        assert!(a.correlation_drop_when_cue_decorrelated >= 0.70);
+    }
+
+    #[test]
+    fn internal_confidence_holds() {
+        let a = simulate_delegation_game(true, 0.5, 0.9, 0.5, 400, 40, 9);
+        assert!(a.correlation_drop_when_cue_decorrelated.abs() < 0.03);
+        assert!(a.correlation_correlated > 0.5);
+    }
+}

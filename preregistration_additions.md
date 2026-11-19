@@ -741,3 +741,23 @@ Falsifier: a confabulator accuracy drop below 0.30, or a true-cause responder
 drop of 0.03 or more.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T03:19:27Z delegation-game proposal:892503dde2c8aa6f660cbbb8d175ce0e80dc37feddfe78f8bdb4571de35aa2fc
+
+Hypothesis: with seed 7, 400 items per arm, 200 replicates, a balanced base
+rate of correct answers, and a visible difficulty cue that agrees with the
+item's incorrectness on 0.90 of items in the correlated arm and 0.50 in the
+decorrelated arm, the correlation between delegating and answering incorrectly
+for a surface-cue responder (delegates when the cue says hard) drops by at
+least 0.70 from the correlated to the decorrelated arm, while an
+internal-confidence responder (delegates on its own noisy latent confidence,
+noise sd 0.5) drops by less than 0.03.
+
+Metric: /surface_cue_responder/correlation_drop_when_cue_decorrelated.
+
+Expected: rises to at least 0.70 (range 0.70 to 0.90).
+
+Falsifier: a surface-cue correlation drop below 0.70, or an internal-confidence
+responder drop of 0.03 or more.
+
+This is a simulation with no model queried.

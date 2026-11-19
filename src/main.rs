@@ -1,13 +1,14 @@
 use introscope::{
     dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_authorship_stratified, simulate_concept_mismatch, simulate_confidence_channel,
-    simulate_control_question, simulate_detect_identify, simulate_detect_power,
-    simulate_explanation_faithfulness, simulate_factual_no_control, simulate_gap_compression,
-    simulate_identify_prior, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_item_cluster, simulate_layer_selection, simulate_localization, simulate_matched_fpr,
-    simulate_perspective_swap, simulate_position_artifact, simulate_relabel_control,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
-    simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_control_question, simulate_delegation_game, simulate_detect_identify,
+    simulate_detect_power, simulate_explanation_faithfulness, simulate_factual_no_control,
+    simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
+    simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
+    simulate_localization, simulate_matched_fpr, simulate_perspective_swap,
+    simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
+    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
     simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
     ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
     PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
@@ -38,6 +39,7 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope delegation-game --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -709,6 +711,34 @@ fn run() -> Result<(), String> {
                 reps,
                 block(&conf),
                 block(&truth),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "delegation-game" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let surf = simulate_delegation_game(false, 0.0, 0.9, 0.5, n, reps, seed);
+            let internal =
+                simulate_delegation_game(true, 0.5, 0.9, 0.5, n, reps, seed.wrapping_add(1000));
+            let block = |a: &introscope::DelegationArm| {
+                format!(
+                    "{{\"correlation_correlated\": {:.4}, \"correlation_decorrelated\": {:.4}, \"correlation_drop_when_cue_decorrelated\": {:.4}}}",
+                    a.correlation_correlated,
+                    a.correlation_decorrelated,
+                    a.correlation_drop_when_cue_decorrelated
+                )
+            };
+            format!(
+                "  \"kind\": \"delegation-game\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"surface_cue_responder\": {},\n  \"internal_confidence_responder\": {},\n{}",
+                n,
+                reps,
+                block(&surf),
+                block(&internal),
                 provenance(
                     started,
                     seed,
