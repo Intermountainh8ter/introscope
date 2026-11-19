@@ -1,18 +1,19 @@
 use introscope::{
     dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
-    simulate_authorship_stratified, simulate_concept_mismatch, simulate_confidence_channel,
-    simulate_control_question, simulate_delegation_game, simulate_detect_identify,
-    simulate_detect_power, simulate_explanation_faithfulness, simulate_factual_no_control,
-    simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
-    simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
-    simulate_localization, simulate_matched_fpr, simulate_null_power, simulate_parse_censoring,
-    simulate_perspective_swap, simulate_position_artifact, simulate_prime_sweep,
-    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
-    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
-    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
-    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
-    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
-    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
+    simulate_anchored_power, simulate_authorship_stratified, simulate_concept_mismatch,
+    simulate_confidence_channel, simulate_control_question, simulate_delegation_game,
+    simulate_detect_identify, simulate_detect_power, simulate_explanation_faithfulness,
+    simulate_factual_no_control, simulate_gap_compression, simulate_identify_prior,
+    simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
+    simulate_layer_selection, simulate_localization, simulate_matched_fpr, simulate_null_power,
+    simulate_parse_censoring, simulate_perspective_swap, simulate_position_artifact,
+    simulate_prime_sweep, simulate_relabel_control, simulate_selfcross_power,
+    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
+    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
+    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
+    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
+    WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -43,6 +44,8 @@ USAGE:
   introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope parse-censoring --out <results.json> [--seed 7] [--n 400] [--reps 200]
+  introscope anchored-power --out <results.json> [--seed 7] [--reps 200]
+      Smallest trials per arm separating a hit-0.20 detector from a yes-shift responder.
   introscope null-power --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope prime-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -810,6 +813,34 @@ fn run() -> Result<(), String> {
                     seed,
                     clock.elapsed().as_secs_f64(),
                     "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "anchored-power" => {
+            let reps = args.number("--reps", 200)? as usize;
+            let s = simulate_anchored_power(0.20, 0.02, 0.11, 5, 100, reps, seed);
+            let points = s
+                .points
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{{\"trials_per_arm\": {}, \"detector_power\": {:.4}, \"yes_shift_flag_rate\": {:.4}}}",
+                        p.trials_per_arm, p.detector_power, p.yes_shift_flag_rate
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "  \"kind\": \"anchored-power\",\n  \"reps\": {},\n  \"trials_to_separate\": {},\n  \"yes_shift_flag_rate_at_trials\": {:.4},\n  \"sweep\": [{}],\n{}",
+                reps,
+                s.trials_to_separate,
+                s.yes_shift_flag_rate_at_trials,
+                points,
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"https://www.anthropic.com/research/introspection\", \"license\": \"public web page; only the roughly 20% best-protocol hit rate is used as a simulation parameter, no data copied\"}]"
                 )
             )
         }

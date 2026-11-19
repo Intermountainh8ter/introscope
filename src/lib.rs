@@ -2942,3 +2942,100 @@ mod null_power_tests {
         );
     }
 }
+
+/// One grid point of the anchored-power sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnchoredPowerPoint {
+    pub trials_per_arm: usize,
+    pub detector_power: f64,
+    pub yes_shift_flag_rate: f64,
+}
+
+/// Result of the anchored-power sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnchoredPower {
+    pub points: Vec<AnchoredPowerPoint>,
+    /// Smallest grid count with detector power >= 0.80, 0 if none.
+    pub trials_to_separate: usize,
+    pub yes_shift_flag_rate_at_trials: f64,
+}
+
+/// One-sided pooled two-proportion z test at alpha 0.05 (z > 1.645): is the
+/// yes rate on the injected arm higher than on the noise arm?
+fn separates(yes_inj: usize, yes_noise: usize, n: usize) -> bool {
+    let pooled = (yes_inj + yes_noise) as f64 / (2 * n) as f64;
+    let se = (pooled * (1.0 - pooled) * 2.0 / n as f64).sqrt();
+    if se == 0.0 {
+        return false;
+    }
+    ((yes_inj as f64 - yes_noise as f64) / n as f64) / se > 1.645
+}
+
+/// Sweep trials per arm from `step` to `max_n`; a detector (hit, false alarm)
+/// and a yes-shift responder with yes rate `shift_rate` on both arms are each
+/// tested in `reps` replicates per grid point.
+pub fn simulate_anchored_power(
+    hit: f64,
+    false_alarm: f64,
+    shift_rate: f64,
+    step: usize,
+    max_n: usize,
+    reps: usize,
+    seed: u64,
+) -> AnchoredPower {
+    let mut rng = Rng::new(seed);
+    let mut points = Vec::new();
+    let mut n = step;
+    while n <= max_n {
+        let mut det = 0usize;
+        let mut shift = 0usize;
+        for _ in 0..reps {
+            let a = (0..n).filter(|_| rng.coin(hit)).count();
+            let b = (0..n).filter(|_| rng.coin(false_alarm)).count();
+            if separates(a, b, n) {
+                det += 1;
+            }
+            let c = (0..n).filter(|_| rng.coin(shift_rate)).count();
+            let d = (0..n).filter(|_| rng.coin(shift_rate)).count();
+            if separates(c, d, n) {
+                shift += 1;
+            }
+        }
+        points.push(AnchoredPowerPoint {
+            trials_per_arm: n,
+            detector_power: det as f64 / reps as f64,
+            yes_shift_flag_rate: shift as f64 / reps as f64,
+        });
+        n += step;
+    }
+    let hit_point = points.iter().find(|p| p.detector_power >= 0.80);
+    AnchoredPower {
+        trials_to_separate: hit_point.map_or(0, |p| p.trials_per_arm),
+        yes_shift_flag_rate_at_trials: hit_point.map_or(f64::NAN, |p| p.yes_shift_flag_rate),
+        points,
+    }
+}
+
+#[cfg(test)]
+mod anchored_power_tests {
+    use super::*;
+
+    #[test]
+    fn threshold_in_range_and_shift_not_flagged() {
+        let s = simulate_anchored_power(0.20, 0.02, 0.11, 5, 100, 200, 7);
+        assert_eq!(s.points.len(), 20);
+        assert!(s.trials_to_separate >= 25 && s.trials_to_separate <= 60);
+        assert!(s.yes_shift_flag_rate_at_trials <= 0.10);
+    }
+
+    #[test]
+    fn power_rises_with_trials() {
+        let s = simulate_anchored_power(0.20, 0.02, 0.11, 5, 100, 200, 7);
+        assert!(s.points[19].detector_power > s.points[0].detector_power);
+    }
+
+    #[test]
+    fn identical_arms_never_separate() {
+        assert!(!separates(0, 0, 10));
+    }
+}

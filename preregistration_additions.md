@@ -819,3 +819,22 @@ Falsifier: a zero-detection probability at a true rate of 1% below 0.01 or
 above 0.05 over 200 seeded replicates.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T04:10:26Z anchored-power proposal:441a66353fcb5972e20aa5c295aeee0d83371567282255bcc12dbab17fa93884
+
+Hypothesis: with seed 7 and 200 replicates per grid point (trials per arm 5
+to 100 in steps of 5), the smallest trials-per-arm at which a detector (hit
+0.20, false alarm 0.02) is separated from noise by a one-sided pooled
+two-proportion z test at alpha 0.05 with power at least 0.80 lies between 25
+and 60 (analytic normal-approximation value about 37), while a yes-shift
+responder (yes rate 0.11 on both arms) at that same count is flagged in at
+most 0.10 of replicates.
+
+Metric: /trials_to_separate.
+
+Expected: about 37, within 25 to 60.
+
+Falsifier: a smallest qualifying trials-per-arm outside 25 to 60, or a
+yes-shift responder flagged in more than 0.10 of replicates at that count.
+
+This is a simulation with no model queried.

@@ -474,3 +474,12 @@ not zero. At a true rate of 1% the share of 200 replicates with zero detections
 is 0.0250 (analytic 0.0180); at 0.5% it is 0.1200 (analytic 0.1347). Zero
 detections give a 95% upper bound below 1% only from 299 trials. This is a
 simulation; no model has been queried.
+
+## Anchored-power simulation
+
+`results/514-anchored-power.json` simulates a state-driven detector with hit
+rate 0.2 and false-alarm rate 0.02 against a one-sided pooled two-proportion
+test, sweeping trials per arm from 5 to 100 with 200 replicates per point. The
+smallest count with power at least 0.8 is 35 trials per arm, where a yes-shift
+responder (yes rate 0.11 on both arms) is flagged in 0.05 of replicates. This
+is a simulation; no model has been queried.
