@@ -2776,3 +2776,96 @@ mod prime_sweep_tests {
         assert_eq!(s.points.len(), 21);
     }
 }
+
+/// One grid point of the parse-censoring sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CensorPoint {
+    pub failure_rate: f64,
+    pub parsed_only_gap: f64,
+    pub all_replies_gap: f64,
+}
+
+/// Result of the parse-censoring sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParseCensoring {
+    pub points: Vec<CensorPoint>,
+    pub max_parsed_only_inflation: f64,
+    pub max_abs_all_replies_gap: f64,
+}
+
+/// A no-information responder says yes with probability 0.5 on both arms. On
+/// injected trials a no-reply is unparseable with probability `failure_rate`;
+/// noise-arm replies always parse. The parsed-only gap is the yes share of
+/// parsed injected replies minus the yes share of noise replies; the
+/// all-replies gap counts unparseable replies as no.
+pub fn simulate_parse_censoring(
+    max_rate: f64,
+    steps: usize,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> ParseCensoring {
+    let mut rng = Rng::new(seed);
+    let r = reps as f64;
+    let mut points = Vec::with_capacity(steps + 1);
+    for i in 0..=steps {
+        let failure_rate = max_rate * i as f64 / steps as f64;
+        let (mut parsed_sum, mut all_sum) = (0.0, 0.0);
+        for _ in 0..reps {
+            let (mut yes, mut parsed_no) = (0usize, 0usize);
+            for _ in 0..n {
+                if rng.coin(0.5) {
+                    yes += 1;
+                } else if !rng.coin(failure_rate) {
+                    parsed_no += 1;
+                }
+            }
+            let fa = (0..n).filter(|_| rng.coin(0.5)).count() as f64 / n as f64;
+            let parsed = yes + parsed_no;
+            let hit_parsed = if parsed == 0 {
+                0.0
+            } else {
+                yes as f64 / parsed as f64
+            };
+            parsed_sum += hit_parsed - fa;
+            all_sum += yes as f64 / n as f64 - fa;
+        }
+        points.push(CensorPoint {
+            failure_rate,
+            parsed_only_gap: parsed_sum / r,
+            all_replies_gap: all_sum / r,
+        });
+    }
+    let max_parsed_only_inflation = points
+        .iter()
+        .map(|p| p.parsed_only_gap)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let max_abs_all_replies_gap = points
+        .iter()
+        .map(|p| p.all_replies_gap.abs())
+        .fold(0.0, f64::max);
+    ParseCensoring {
+        points,
+        max_parsed_only_inflation,
+        max_abs_all_replies_gap,
+    }
+}
+
+#[cfg(test)]
+mod parse_censoring_tests {
+    use super::*;
+
+    #[test]
+    fn parsed_only_gap_inflates_all_replies_gap_does_not() {
+        let s = simulate_parse_censoring(0.5, 10, 400, 40, 7);
+        assert_eq!(s.points.len(), 11);
+        assert!(s.max_parsed_only_inflation >= 0.15);
+        assert!(s.max_abs_all_replies_gap <= 0.03);
+    }
+
+    #[test]
+    fn no_failures_no_inflation() {
+        let s = simulate_parse_censoring(0.5, 10, 400, 40, 7);
+        assert!(s.points[0].parsed_only_gap.abs() <= 0.03);
+    }
+}

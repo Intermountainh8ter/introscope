@@ -455,3 +455,13 @@ of 0.7984 when the visible difficulty cue tracks incorrectness and 0.0060 when
 it is decorrelated, a drop of 0.7924. An internal-confidence responder has
 0.6777 and 0.6816, a drop of -0.0039. This is a simulation; no model has been
 queried.
+
+## Parse-censoring simulation
+
+`results/511-parse-censoring.json` simulates a no-information responder that
+says yes with probability 0.5 on both arms, at 400 trials per arm and 200
+replicates, with the no-replies on injected trials unparseable at a swept rate.
+Scoring parsed replies only gives a maximum hit-minus-false-alarm gap of 0.1699
+over the failure-rate grid; counting unparseable replies as no keeps the
+largest absolute gap at 0.0054. This is a simulation; no model has been
+queried.

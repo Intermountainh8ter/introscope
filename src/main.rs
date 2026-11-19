@@ -5,14 +5,14 @@ use introscope::{
     simulate_detect_power, simulate_explanation_faithfulness, simulate_factual_no_control,
     simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
     simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
-    simulate_localization, simulate_matched_fpr, simulate_perspective_swap,
-    simulate_position_artifact, simulate_prime_sweep, simulate_relabel_control,
-    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
-    simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
-    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_localization, simulate_matched_fpr, simulate_parse_censoring,
+    simulate_perspective_swap, simulate_position_artifact, simulate_prime_sweep,
+    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
+    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
+    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
+    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
+    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -42,6 +42,7 @@ USAGE:
   introscope delegation-game --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
+  introscope parse-censoring --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope prime-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -773,6 +774,36 @@ fn run() -> Result<(), String> {
                 reps,
                 block(&guess),
                 block(&signal),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "parse-censoring" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let s = simulate_parse_censoring(0.50, 10, n, reps, seed);
+            let points = s
+                .points
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{{\"failure_rate\": {:.2}, \"parsed_only_gap\": {:.4}, \"all_replies_gap\": {:.4}}}",
+                        p.failure_rate, p.parsed_only_gap, p.all_replies_gap
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "  \"kind\": \"parse-censoring\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"parsed_only_detection_inflation\": {{\"max_over_failure_rates\": {:.4}}},\n  \"all_replies_gap\": {{\"max_abs_over_failure_rates\": {:.4}}},\n  \"sweep\": [{}],\n{}",
+                n,
+                reps,
+                s.max_parsed_only_inflation,
+                s.max_abs_all_replies_gap,
+                points,
                 provenance(
                     started,
                     seed,

@@ -782,3 +782,22 @@ Falsifier: a priming flip strength outside 0.25 to 0.35, or a prime-only
 false-alarm rate below 0.25 at the flip strength.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T03:30:00Z parse-censoring proposal:cb23361fe757674277a4ad94527ae27cca99cbbf165ba0445d19c93f25b13c21
+
+Hypothesis: with seed 7, 400 injected and 400 noise trials per arm, 200
+replicates and a parse-failure rate grid of 0.00 to 0.50 in steps of 0.05, a
+no-information responder that says yes with probability 0.5 on both arms and
+whose no-replies on injected trials are unparseable with the swept rate has a
+mean parsed-only hit-minus-false-alarm gap that reaches at least 0.15 at rate
+0.50 (analytic value 0.1667), while its all-replies gap (unparseable counted
+as no) stays within 0.03 of zero at every rate.
+
+Metric: /parsed_only_detection_inflation/max_over_failure_rates.
+
+Expected: rises to about 0.1667, at least 0.15 (range 0.15 to 0.18).
+
+Falsifier: a maximum parsed-only inflation below 0.15, or an all-replies gap
+with absolute value above 0.03 at any failure rate.
+
+This is a simulation with no model queried.

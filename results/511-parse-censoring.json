@@ -1,0 +1,9 @@
+{
+  "kind": "parse-censoring",
+  "n_per_arm": 400,
+  "reps": 200,
+  "parsed_only_detection_inflation": {"max_over_failure_rates": 0.1699},
+  "all_replies_gap": {"max_abs_over_failure_rates": 0.0054},
+  "sweep": [{"failure_rate": 0.00, "parsed_only_gap": -0.0013, "all_replies_gap": -0.0013}, {"failure_rate": 0.05, "parsed_only_gap": 0.0100, "all_replies_gap": -0.0025}, {"failure_rate": 0.10, "parsed_only_gap": 0.0274, "all_replies_gap": 0.0006}, {"failure_rate": 0.15, "parsed_only_gap": 0.0443, "all_replies_gap": 0.0033}, {"failure_rate": 0.20, "parsed_only_gap": 0.0585, "all_replies_gap": 0.0035}, {"failure_rate": 0.25, "parsed_only_gap": 0.0729, "all_replies_gap": 0.0010}, {"failure_rate": 0.30, "parsed_only_gap": 0.0902, "all_replies_gap": 0.0021}, {"failure_rate": 0.35, "parsed_only_gap": 0.1037, "all_replies_gap": -0.0033}, {"failure_rate": 0.40, "parsed_only_gap": 0.1188, "all_replies_gap": -0.0054}, {"failure_rate": 0.45, "parsed_only_gap": 0.1424, "all_replies_gap": -0.0034}, {"failure_rate": 0.50, "parsed_only_gap": 0.1699, "all_replies_gap": 0.0032}],
+  "provenance": {"started_at": "2026-11-19T03:57:30Z", "seeds": [7], "command": "target/release/introscope parse-censoring --seed 7 --n 400 --reps 200 --out results/511-parse-censoring.json", "hardware": "linux x86_64", "wall_s": 0.022, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
