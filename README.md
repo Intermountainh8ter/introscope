@@ -400,3 +400,16 @@ of -0.0001. A wording-dependent responder has 0.4471 under the original wording
 and -0.0008 under the changed one. A random picker has 0.0025. An above-chance
 localization score alone does not separate a shortcut from introspective
 access. This is a simulation; no model has been queried.
+
+## Logit-gap-compression simulation
+
+`results/503-logit-gap-compression.json` simulates a yes-rate rise that comes
+from compressing each item's yes/no logit gap, at 400 trials per arm and 200
+replicates with baseline gaps drawn from Normal(-2, 1) and a compression factor
+of 0.5. A compression responder has a clean yes rate of 0.1559 and an injected
+yes rate of 0.2793, a rise of 0.1234, but a matched random direction gives
+0.2796, so the injected-minus-random difference is -0.0003. A true detector
+(injection-only shift) has a rise of 0.3460 and an injected-minus-random
+difference of 0.3438. A clean-versus-injected score alone does not separate
+compression from detection; the matched random direction does. This is a
+simulation; no model has been queried.

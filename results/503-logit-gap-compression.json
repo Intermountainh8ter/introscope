@@ -1,0 +1,10 @@
+{
+  "kind": "logit-gap-compression",
+  "n_per_arm": 400,
+  "reps": 200,
+  "baseline_gap_mean": -2.0,
+  "compression_factor": 0.5,
+  "compression_responder": {"clean_yes_rate": 0.1559, "injected_yes_rate": 0.2793, "random_yes_rate": 0.2796, "clean_to_injected_rise": 0.1234, "injected_minus_random_yes_rate": -0.0003},
+  "true_detector": {"clean_yes_rate": 0.1540, "injected_yes_rate": 0.5000, "random_yes_rate": 0.1562, "clean_to_injected_rise": 0.3460, "injected_minus_random_yes_rate": 0.3438},
+  "provenance": {"started_at": "2026-11-19T02:49:14Z", "seeds": [7], "command": "target/release/introscope logit-gap-compression --out results/503-logit-gap-compression.json --seed 7 --n 400 --reps 200", "hardware": "linux x86_64", "wall_s": 0.033, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

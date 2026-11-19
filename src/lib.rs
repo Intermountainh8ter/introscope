@@ -2350,3 +2350,78 @@ mod localization_tests {
         assert!(g.mean_wording_change < -0.40);
     }
 }
+
+/// Result of the logit-gap-compression simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompressionArm {
+    pub clean_yes_rate: f64,
+    pub injected_yes_rate: f64,
+    pub random_yes_rate: f64,
+    pub clean_to_injected_rise: f64,
+    pub injected_minus_random_yes_rate: f64,
+}
+
+/// Simulate yes rates when each item has a baseline yes/no logit gap drawn from
+/// Normal(`gap_mean`, 1). Under injection the gap becomes
+/// `gap * injected_scale + injected_shift`; under a matched random direction it
+/// becomes `gap * random_scale`. A trial says yes with probability
+/// sigmoid(gap). `n` trials per arm, averaged over `reps`.
+pub fn simulate_gap_compression(
+    gap_mean: f64,
+    injected_scale: f64,
+    injected_shift: f64,
+    random_scale: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> CompressionArm {
+    let mut rng = Rng::new(seed);
+    let sig = |g: f64| 1.0 / (1.0 + (-g).exp());
+    let (mut c, mut i, mut r) = (0.0, 0.0, 0.0);
+    for _ in 0..reps {
+        let (mut hc, mut hi, mut hr) = (0usize, 0usize, 0usize);
+        for _ in 0..n {
+            let g = gap_mean + rng.normal();
+            hc += rng.coin(sig(g)) as usize;
+        }
+        for _ in 0..n {
+            let g = gap_mean + rng.normal();
+            hi += rng.coin(sig(g * injected_scale + injected_shift)) as usize;
+        }
+        for _ in 0..n {
+            let g = gap_mean + rng.normal();
+            hr += rng.coin(sig(g * random_scale)) as usize;
+        }
+        let nf = n as f64;
+        c += hc as f64 / nf;
+        i += hi as f64 / nf;
+        r += hr as f64 / nf;
+    }
+    let k = reps as f64;
+    let (c, i, r) = (c / k, i / k, r / k);
+    CompressionArm {
+        clean_yes_rate: c,
+        injected_yes_rate: i,
+        random_yes_rate: r,
+        clean_to_injected_rise: i - c,
+        injected_minus_random_yes_rate: i - r,
+    }
+}
+
+#[cfg(test)]
+mod compression_tests {
+    use super::*;
+
+    #[test]
+    fn compression_rises_but_matches_random() {
+        let a = simulate_gap_compression(-2.0, 0.5, 0.0, 0.5, 400, 40, 7);
+        assert!(a.clean_to_injected_rise >= 0.10);
+        assert!(a.injected_minus_random_yes_rate.abs() < 0.03);
+    }
+
+    #[test]
+    fn detector_separates_from_random() {
+        let d = simulate_gap_compression(-2.0, 1.0, 2.0, 1.0, 400, 40, 9);
+        assert!(d.injected_minus_random_yes_rate >= 0.25);
+    }
+}

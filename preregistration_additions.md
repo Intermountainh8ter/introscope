@@ -661,3 +661,25 @@ absolute mean change under the wording change of 0.03 or more, or a
 random-picker accuracy minus chance with absolute value 0.03 or more.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T02:48:59Z logit-gap-compression proposal:927bd282b0e0b8f7edb8e5e11deb29b420a28ed98a5ff3e679c090d12d8fcdeb
+
+Hypothesis: with seed 7, 400 trials per arm, 200 replicates, baseline logit
+gaps drawn from Normal(-2, 1) and a compression factor of 0.5 applied alike
+under injection and under a matched random direction, a compression responder
+has a clean-to-injected yes-rate rise of at least 0.10 but a mean
+injected-minus-random yes-rate difference within 0.03 of zero, while a true
+detector (injection-only shift) keeps an injected-minus-random difference of at
+least 0.25. A clean-versus-injected detection score alone therefore cannot
+separate compression from detection; only the matched random direction does.
+
+Metric: /compression_responder/injected_minus_random_yes_rate.
+
+Expected: near zero, within 0.03 of zero (range -0.03 to 0.03).
+
+Falsifier: a compression-responder injected-minus-random yes-rate difference
+with absolute value 0.03 or more, a clean-to-injected rise below 0.10, or a
+true-detector injected-minus-random difference below 0.25.
+
+This is a simulation with no model queried. The true detector adds 2.0 to each
+item's logit gap under injection only.

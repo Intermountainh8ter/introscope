@@ -2,15 +2,15 @@ use introscope::{
     dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_factual_no_control,
-    simulate_identify_prior, simulate_impact_matched, simulate_input_only_baseline,
-    simulate_item_cluster, simulate_layer_selection, simulate_localization, simulate_matched_fpr,
-    simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
-    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
-    simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
-    ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
-    PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
-    WORDING_LEADS,
+    simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
+    simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
+    simulate_localization, simulate_matched_fpr, simulate_position_artifact,
+    simulate_relabel_control, simulate_selfcross_power, simulate_selfpred_power,
+    simulate_sham_power, simulate_share_cell, simulate_stack_drift, simulate_strength_identity_gap,
+    simulate_three_arm, simulate_wording_arm, simulate_wording_cell, simulate_wording_design,
+    synth_trials, BaselinePredictor, ConfidenceKind, GapArm, GapResponder, ImpactControl,
+    ImpactResponder, ItemResponder, Naming, PriorResponder, Responder, SelfCrossSpec, WordingProbs,
+    WordingResponder, CONCEPT_DISRUPTION, WORDING_LEADS,
 };
 use std::process::ExitCode;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
@@ -36,6 +36,10 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
+      Compare a gap-compression responder and a true detector on the clean-to-
+      injected yes-rate rise and the injected-minus-random-direction difference.
 
   introscope localization-shortcut --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Compare a shortcut, a wording-dependent and a random sentence picker on
@@ -665,6 +669,32 @@ fn run() -> Result<(), String> {
                 reps,
                 resamples,
                 block(&nul),
+                block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "logit-gap-compression" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let comp = simulate_gap_compression(-2.0, 0.5, 0.0, 0.5, n, reps, seed);
+            let det =
+                simulate_gap_compression(-2.0, 1.0, 2.0, 1.0, n, reps, seed.wrapping_add(1000));
+            let block = |a: &introscope::CompressionArm| {
+                format!(
+                    "{{\"clean_yes_rate\": {:.4}, \"injected_yes_rate\": {:.4}, \"random_yes_rate\": {:.4}, \"clean_to_injected_rise\": {:.4}, \"injected_minus_random_yes_rate\": {:.4}}}",
+                    a.clean_yes_rate, a.injected_yes_rate, a.random_yes_rate, a.clean_to_injected_rise, a.injected_minus_random_yes_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"logit-gap-compression\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"baseline_gap_mean\": -2.0,\n  \"compression_factor\": 0.5,\n  \"compression_responder\": {},\n  \"true_detector\": {},\n{}",
+                n,
+                reps,
+                block(&comp),
                 block(&det),
                 provenance(
                     started,
