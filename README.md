@@ -436,3 +436,12 @@ of 0.3600 and a within-stratum gap of 0.0024. An authorship-signal responder has
 a pooled gap of 0.4996 and a within-stratum gap of 0.4988. A pooled gap alone
 does not separate the two; stratifying on the surface feature does. This is a
 simulation; no model has been queried.
+
+## Explanation-faithfulness simulation
+
+`results/508-explanation-faithfulness.json` simulates predicting whether an
+answer changes under a cause-removing edit, at 400 items per arm and 200
+replicates. A surface-cue confabulator has accuracy 0.8991 when the visible cue
+matches the hidden cause and 0.5030 when it is decorrelated, a drop of 0.3962.
+A true-cause responder has accuracy 0.8991 and 0.8995, a drop of -0.0004. This
+is a simulation; no model has been queried.

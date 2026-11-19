@@ -723,3 +723,21 @@ Falsifier: a content-guess within-stratum gap with absolute value 0.05 or more,
 or an authorship-signal within-stratum gap below 0.30.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T03:15:10Z explanation-faithfulness proposal:027740cdf0c2c7eb77ed1052fc4f43e13d82df4d179041de05cc59b4e9c426e5
+
+Hypothesis: with seed 7, 400 items per arm, 200 replicates, a visible cue that
+matches the hidden cause on 0.90 of items in the correlated arm and 0.50 in the
+decorrelated arm, a surface-cue confabulator's accuracy at predicting the
+answer change under a cause-removing edit drops by at least 0.30 from the
+correlated to the decorrelated arm, while a true-cause responder (reads the
+cause with 0.90 accuracy) drops by less than 0.03.
+
+Metric: /confabulator_responder/counterfactual_accuracy_drop_when_cue_decorrelated.
+
+Expected: rises to at least 0.30 (range 0.30 to 0.50).
+
+Falsifier: a confabulator accuracy drop below 0.30, or a true-cause responder
+drop of 0.03 or more.
+
+This is a simulation with no model queried.

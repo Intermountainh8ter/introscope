@@ -1,0 +1,8 @@
+{
+  "kind": "explanation-faithfulness",
+  "n_per_arm": 400,
+  "reps": 200,
+  "confabulator_responder": {"accuracy_correlated": 0.8991, "accuracy_decorrelated": 0.5030, "counterfactual_accuracy_drop_when_cue_decorrelated": 0.3962},
+  "true_cause_responder": {"accuracy_correlated": 0.8991, "accuracy_decorrelated": 0.8995, "counterfactual_accuracy_drop_when_cue_decorrelated": -0.0004},
+  "provenance": {"started_at": "2026-11-19T03:15:25Z", "seeds": [7], "command": "target/release/introscope explanation-faithfulness --seed 7 --n 400 --reps 200 --out results/508-explanation-faithfulness.json", "hardware": "linux x86_64", "wall_s": 0.010, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}

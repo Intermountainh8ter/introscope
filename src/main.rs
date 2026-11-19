@@ -2,9 +2,9 @@ use introscope::{
     dose_gated_d_prime, harmonic, iso_utc, json_escape, parse_trials, report_json, score,
     simulate_authorship_stratified, simulate_concept_mismatch, simulate_confidence_channel,
     simulate_control_question, simulate_detect_identify, simulate_detect_power,
-    simulate_factual_no_control, simulate_gap_compression, simulate_identify_prior,
-    simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
-    simulate_layer_selection, simulate_localization, simulate_matched_fpr,
+    simulate_explanation_faithfulness, simulate_factual_no_control, simulate_gap_compression,
+    simulate_identify_prior, simulate_impact_matched, simulate_input_only_baseline,
+    simulate_item_cluster, simulate_layer_selection, simulate_localization, simulate_matched_fpr,
     simulate_perspective_swap, simulate_position_artifact, simulate_relabel_control,
     simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
     simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
@@ -38,6 +38,7 @@ USAGE:
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
 
+  introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
@@ -673,6 +674,41 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "explanation-faithfulness" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let conf = simulate_explanation_faithfulness(false, 0.0, 0.9, 0.5, n, reps, seed);
+            let truth = simulate_explanation_faithfulness(
+                true,
+                0.9,
+                0.9,
+                0.5,
+                n,
+                reps,
+                seed.wrapping_add(1000),
+            );
+            let block = |a: &introscope::FaithfulnessArm| {
+                format!(
+                    "{{\"accuracy_correlated\": {:.4}, \"accuracy_decorrelated\": {:.4}, \"counterfactual_accuracy_drop_when_cue_decorrelated\": {:.4}}}",
+                    a.accuracy_correlated,
+                    a.accuracy_decorrelated,
+                    a.counterfactual_accuracy_drop_when_cue_decorrelated
+                )
+            };
+            format!(
+                "  \"kind\": \"explanation-faithfulness\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"confabulator_responder\": {},\n  \"true_cause_responder\": {},\n{}",
+                n,
+                reps,
+                block(&conf),
+                block(&truth),
                 provenance(
                     started,
                     seed,

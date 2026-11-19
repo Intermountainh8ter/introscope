@@ -2534,3 +2534,76 @@ pub fn simulate_authorship_stratified(
         within_stratum_authorship_gap: within / k,
     }
 }
+
+/// Result of the explanation-faithfulness simulation for one responder.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FaithfulnessArm {
+    pub accuracy_correlated: f64,
+    pub accuracy_decorrelated: f64,
+    pub counterfactual_accuracy_drop_when_cue_decorrelated: f64,
+}
+
+/// Simulate predicting whether an answer changes under a cause-removing edit.
+/// The hidden cause is present on half the items; the answer changes iff it is
+/// present. The visible cue equals the cause with probability `match_corr` in
+/// the correlated arm and `match_decorr` in the decorrelated arm. A surface-cue
+/// responder (`reads_cause` false) predicts a change iff the cue is 1; a
+/// true-cause responder reads the cause correctly with probability `acc`.
+pub fn simulate_explanation_faithfulness(
+    reads_cause: bool,
+    acc: f64,
+    match_corr: f64,
+    match_decorr: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> FaithfulnessArm {
+    let mut rng = Rng::new(seed);
+    let (mut a_corr, mut a_dec) = (0.0, 0.0);
+    for _ in 0..reps {
+        let mut run = |m: f64| -> f64 {
+            let mut right = 0usize;
+            for _ in 0..n {
+                let cause = rng.coin(0.5);
+                let cue = if rng.coin(m) { cause } else { !cause };
+                let pred = if reads_cause {
+                    if rng.coin(acc) {
+                        cause
+                    } else {
+                        !cause
+                    }
+                } else {
+                    cue
+                };
+                right += (pred == cause) as usize;
+            }
+            right as f64 / n as f64
+        };
+        a_corr += run(match_corr);
+        a_dec += run(match_decorr);
+    }
+    let r = reps as f64;
+    let (c, d) = (a_corr / r, a_dec / r);
+    FaithfulnessArm {
+        accuracy_correlated: c,
+        accuracy_decorrelated: d,
+        counterfactual_accuracy_drop_when_cue_decorrelated: c - d,
+    }
+}
+
+#[cfg(test)]
+mod faithfulness_tests {
+    use super::*;
+
+    #[test]
+    fn confabulator_drops_when_cue_decorrelated() {
+        let a = simulate_explanation_faithfulness(false, 0.0, 0.9, 0.5, 400, 40, 7);
+        assert!(a.counterfactual_accuracy_drop_when_cue_decorrelated >= 0.30);
+    }
+
+    #[test]
+    fn true_cause_responder_holds() {
+        let a = simulate_explanation_faithfulness(true, 0.9, 0.9, 0.5, 400, 40, 9);
+        assert!(a.counterfactual_accuracy_drop_when_cue_decorrelated.abs() < 0.03);
+    }
+}
