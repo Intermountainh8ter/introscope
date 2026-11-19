@@ -2107,3 +2107,65 @@ pub fn simulate_strength_identity_gap(
         mean_abs_gap: sabs / r,
     }
 }
+
+/// Result of comparing responders at one fixed false-alarm rate.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MatchedFprArm {
+    pub mean_hit_rate: f64,
+    pub mean_false_alarm_rate: f64,
+    /// Mean of hit rate minus the matched-random responder's hit rate.
+    pub mean_advantage: f64,
+    /// Fraction of replicates whose Wald interval for the advantage excludes zero.
+    pub excludes_zero_rate: f64,
+}
+
+/// Simulate `reps` replicates of `n` signal and `n` noise trials. A responder
+/// with Gaussian readout (true d' `d`) answers yes above the criterion that
+/// gives false-alarm rate `fpr`; each replicate is compared with a
+/// matched-random responder (d' 0, same criterion) drawn on the same size.
+/// `yes_shift` instead ignores the readout and says yes with probability `fpr`.
+pub fn simulate_matched_fpr(
+    d: f64,
+    yes_shift: bool,
+    fpr: f64,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> MatchedFprArm {
+    let c = probit(1.0 - fpr);
+    let mut rng = Rng::new(seed);
+    let nf = n as f64;
+    let (mut sh, mut sf, mut sa, mut excl) = (0.0, 0.0, 0.0, 0usize);
+    for _ in 0..reps {
+        let draw = |mean: f64, rng: &mut Rng| -> usize {
+            (0..n)
+                .filter(|_| {
+                    if yes_shift {
+                        rng.coin(fpr)
+                    } else {
+                        mean + rng.normal() > c
+                    }
+                })
+                .count()
+        };
+        let hits = draw(d, &mut rng);
+        let fas = draw(0.0, &mut rng);
+        let rand_hits = draw(0.0, &mut rng);
+        let (h, f, r) = (hits as f64 / nf, fas as f64 / nf, rand_hits as f64 / nf);
+        let adv = h - r;
+        let se = ((h * (1.0 - h) + r * (1.0 - r)) / nf).sqrt();
+        sh += h;
+        sf += f;
+        sa += adv;
+        if se > 0.0 && adv.abs() > 1.96 * se {
+            excl += 1;
+        }
+    }
+    let r = reps as f64;
+    MatchedFprArm {
+        mean_hit_rate: sh / r,
+        mean_false_alarm_rate: sf / r,
+        mean_advantage: sa / r,
+        excludes_zero_rate: excl as f64 / r,
+    }
+}

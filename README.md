@@ -354,3 +354,15 @@ replicates. The range of mean d' across templates is 0.5964, against 0.0051
 across three same-template seed batches, a ratio of 116.1185. A
 random-direction responder keeps a mean d' within 0.0055 of 0 under every
 template. This is a simulation; no model has been queried.
+
+## Matched-false-alarm-rate simulation
+
+`results/498-matched-fpr.json` simulates 400 signal and 400 noise trials per
+arm over 200 replicates, with every responder held at a false-alarm rate of
+0.10. An injected-concept responder (true d' 1.5) has a mean hit rate of 0.5859
+and a mean advantage of 0.4851 over a matched-random-direction responder, with
+an interval that excludes zero in 1.0 of replicates. The matched-random
+responder has a mean advantage of 0.0009 (excludes zero in 0.03 of
+replicates). A yes-shifted responder has a mean advantage of -0.0001 and
+excludes zero in 0.045 of replicates. This is a simulation; no model has been
+queried.

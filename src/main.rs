@@ -3,9 +3,9 @@ use introscope::{
     simulate_concept_mismatch, simulate_confidence_channel, simulate_control_question,
     simulate_detect_identify, simulate_detect_power, simulate_identify_prior,
     simulate_impact_matched, simulate_input_only_baseline, simulate_item_cluster,
-    simulate_layer_selection, simulate_position_artifact, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
-    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_layer_selection, simulate_matched_fpr, simulate_position_artifact,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
+    simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
     simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
     ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
     PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
@@ -35,6 +35,10 @@ USAGE:
       Simulate a content-agnostic and a content-aware responder (plus degenerate
       ones) and report detection against a prompt-only arm and concept
       identification accuracy among detected injected trials.
+
+  introscope matched-fpr --out <results.json> [--seed 7] [--n 400] [--reps 200]
+      Compare injected-concept, matched-random and yes-shifted responders at a
+      fixed false-alarm rate of 0.10.
 
   introscope template-gain --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Simulate three prompt templates that change true d' (1.3, 1.0, 0.7) and
@@ -650,6 +654,36 @@ fn run() -> Result<(), String> {
                 resamples,
                 block(&nul),
                 block(&det),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "matched-fpr" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let fpr = 0.10;
+            let inj = simulate_matched_fpr(1.5, false, fpr, n, reps, seed);
+            let rnd = simulate_matched_fpr(0.0, false, fpr, n, reps, seed.wrapping_add(1000));
+            let yes = simulate_matched_fpr(0.0, true, fpr, n, reps, seed.wrapping_add(2000));
+            let block = |a: &introscope::MatchedFprArm| {
+                format!(
+                    "{{\"mean_hit_rate\": {:.4}, \"mean_false_alarm_rate\": {:.4}, \"mean_advantage\": {:.4}, \"excludes_zero_rate\": {:.4}}}",
+                    a.mean_hit_rate, a.mean_false_alarm_rate, a.mean_advantage, a.excludes_zero_rate
+                )
+            };
+            format!(
+                "  \"kind\": \"matched-fpr\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"false_alarm_rate\": {:.2},\n  \"sensitivity_advantage_at_matched_fpr\": {:.4},\n  \"injected\": {},\n  \"matched_random\": {},\n  \"yes_shifted\": {},\n{}",
+                n,
+                reps,
+                fpr,
+                inj.mean_advantage,
+                block(&inj),
+                block(&rnd),
+                block(&yes),
                 provenance(
                     started,
                     seed,

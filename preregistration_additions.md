@@ -577,3 +577,24 @@ same-template seed-batch range, or the null responder's mean d' is farther
 than 0.05 from 0 under any template.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T02:12:07Z matched-fpr proposal:ff5acd88a508bdf66d69ab31aa11f37ba00c38e0c1e747cee2ce270adc6e9693
+
+Hypothesis: with seed 7, 400 signal and 400 noise trials per arm and 200
+replicates, at a fixed false-alarm rate of 0.10 an injected-concept responder
+(Gaussian readout, true d' 1.5, criterion set for that false-alarm rate) has a
+mean hit-rate advantage over a matched-random-direction responder (true d' 0)
+of at least 0.40, with an interval (Wald, difference of two proportions)
+excluding zero in at least 0.95 of replicates, while a yes-shifted responder
+tuned to the same false-alarm rate has an advantage whose interval excludes
+zero in at most 0.10 of replicates.
+
+Metric: /sensitivity_advantage_at_matched_fpr.
+
+Expected: at least 0.40 (range 0.40 to 1.0).
+
+Falsifier: a mean hit-rate advantage below 0.40 for the injected-concept
+responder, or a yes-shifted responder whose advantage interval excludes zero
+in more than 0.10 of replicates.
+
+This is a simulation with no model queried.

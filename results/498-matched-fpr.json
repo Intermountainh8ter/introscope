@@ -1,0 +1,11 @@
+{
+  "kind": "matched-fpr",
+  "n_per_arm": 400,
+  "reps": 200,
+  "false_alarm_rate": 0.10,
+  "sensitivity_advantage_at_matched_fpr": 0.4851,
+  "injected": {"mean_hit_rate": 0.5859, "mean_false_alarm_rate": 0.0992, "mean_advantage": 0.4851, "excludes_zero_rate": 1.0000},
+  "matched_random": {"mean_hit_rate": 0.0999, "mean_false_alarm_rate": 0.1000, "mean_advantage": 0.0009, "excludes_zero_rate": 0.0300},
+  "yes_shifted": {"mean_hit_rate": 0.1018, "mean_false_alarm_rate": 0.1000, "mean_advantage": -0.0001, "excludes_zero_rate": 0.0450},
+  "provenance": {"started_at": "2026-11-19T02:12:45Z", "seeds": [7], "command": "target/release/introscope matched-fpr --seed 7 --n 400 --reps 200 --out results/498-matched-fpr.json", "hardware": "linux x86_64", "wall_s": 0.029, "data_sources": [{"url": "synthetic: seeded simulation, no external data", "license": "MIT"}]}
+}
