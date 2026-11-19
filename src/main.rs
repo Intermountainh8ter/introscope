@@ -6,9 +6,9 @@ use introscope::{
     simulate_gap_compression, simulate_identify_prior, simulate_impact_matched,
     simulate_input_only_baseline, simulate_item_cluster, simulate_layer_selection,
     simulate_localization, simulate_matched_fpr, simulate_perspective_swap,
-    simulate_position_artifact, simulate_relabel_control, simulate_selfcross_power,
-    simulate_selfpred_power, simulate_sham_power, simulate_share_cell, simulate_stack_drift,
-    simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
+    simulate_position_artifact, simulate_prime_sweep, simulate_relabel_control,
+    simulate_selfcross_power, simulate_selfpred_power, simulate_sham_power, simulate_share_cell,
+    simulate_stack_drift, simulate_strength_identity_gap, simulate_three_arm, simulate_wording_arm,
     simulate_wording_cell, simulate_wording_design, synth_trials, BaselinePredictor,
     ConfidenceKind, GapArm, GapResponder, ImpactControl, ImpactResponder, ItemResponder, Naming,
     PriorResponder, Responder, SelfCrossSpec, WordingProbs, WordingResponder, CONCEPT_DISRUPTION,
@@ -42,6 +42,7 @@ USAGE:
   introscope delegation-game --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope explanation-faithfulness --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope authorship-stratified --out <results.json> [--seed 7] [--n 400] [--reps 200]
+  introscope prime-sweep --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope perspective-swap --out <results.json> [--seed 7] [--n 400] [--reps 200]
   introscope logit-gap-compression --out <results.json> [--seed 7] [--n 400] [--reps 200]
       Compare a gap-compression responder and a true detector on the clean-to-
@@ -772,6 +773,37 @@ fn run() -> Result<(), String> {
                 reps,
                 block(&guess),
                 block(&signal),
+                provenance(
+                    started,
+                    seed,
+                    clock.elapsed().as_secs_f64(),
+                    "[{\"url\": \"synthetic: seeded simulation, no external data\", \"license\": \"MIT\"}]"
+                )
+            )
+        }
+        "prime-sweep" => {
+            let n = args.number("--n", 400)? as usize;
+            let reps = args.number("--reps", 200)? as usize;
+            let s = simulate_prime_sweep(0.30, 0.0, 20, n, reps, seed);
+            let points = s
+                .points
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{{\"prime\": {:.2}, \"genuine_hit\": {:.4}, \"genuine_false_alarm\": {:.4}, \"prime_only_hit\": {:.4}, \"prime_only_false_alarm\": {:.4}}}",
+                        p.prime, p.genuine_hit, p.genuine_false_alarm, p.prime_only_hit, p.prime_only_false_alarm
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!(
+                "  \"kind\": \"prime-sweep\",\n  \"n_per_arm\": {},\n  \"reps\": {},\n  \"reference_hit\": {:.4},\n  \"priming_flip_strength\": {:.2},\n  \"prime_only_false_alarm_at_flip\": {:.4},\n  \"sweep\": [{}],\n{}",
+                n,
+                reps,
+                s.reference_hit,
+                s.priming_flip_strength,
+                s.prime_only_false_alarm_at_flip,
+                points,
                 provenance(
                     started,
                     seed,

@@ -2691,3 +2691,88 @@ mod delegation_tests {
         assert!(a.correlation_correlated > 0.5);
     }
 }
+
+/// One grid point of the prime sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PrimePoint {
+    pub prime: f64,
+    pub genuine_hit: f64,
+    pub genuine_false_alarm: f64,
+    pub prime_only_hit: f64,
+    pub prime_only_false_alarm: f64,
+}
+
+/// Result of the prime sweep.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PrimeSweep {
+    pub points: Vec<PrimePoint>,
+    pub reference_hit: f64,
+    pub priming_flip_strength: f64,
+    pub prime_only_false_alarm_at_flip: f64,
+}
+
+/// Sweep a prompt-priming strength over `steps` equal steps from 0 to 1. A
+/// genuine-signal responder has hit probability `hit0` and false-alarm
+/// probability `fa0` at prime 0; priming moves both towards 1 by prime times
+/// the remaining probability. A prime-only responder says yes with probability
+/// equal to the prime on both arms. The flip strength is the smallest prime at
+/// which the prime-only mean hit rate reaches the genuine responder's mean hit
+/// rate at prime 0 (NaN if never).
+pub fn simulate_prime_sweep(
+    hit0: f64,
+    fa0: f64,
+    steps: usize,
+    n: usize,
+    reps: usize,
+    seed: u64,
+) -> PrimeSweep {
+    let mut rng = Rng::new(seed);
+    let r = reps as f64;
+    let mut points = Vec::with_capacity(steps + 1);
+    for i in 0..=steps {
+        let prime = i as f64 / steps as f64;
+        let gh = hit0 + prime * (1.0 - hit0);
+        let gf = fa0 + prime * (1.0 - fa0);
+        let mut rate = |p: f64| -> f64 {
+            let mut s = 0.0;
+            for _ in 0..reps {
+                s += (0..n).filter(|_| rng.coin(p)).count() as f64 / n as f64;
+            }
+            s / r
+        };
+        points.push(PrimePoint {
+            prime,
+            genuine_hit: rate(gh),
+            genuine_false_alarm: rate(gf),
+            prime_only_hit: rate(prime),
+            prime_only_false_alarm: rate(prime),
+        });
+    }
+    let reference_hit = points[0].genuine_hit;
+    let flip = points.iter().find(|p| p.prime_only_hit >= reference_hit);
+    PrimeSweep {
+        reference_hit,
+        priming_flip_strength: flip.map_or(f64::NAN, |p| p.prime),
+        prime_only_false_alarm_at_flip: flip.map_or(f64::NAN, |p| p.prime_only_false_alarm),
+        points,
+    }
+}
+
+#[cfg(test)]
+mod prime_sweep_tests {
+    use super::*;
+
+    #[test]
+    fn flip_strength_near_genuine_hit_rate() {
+        let s = simulate_prime_sweep(0.30, 0.0, 20, 400, 40, 7);
+        assert!(s.priming_flip_strength >= 0.25 && s.priming_flip_strength <= 0.35);
+        assert!(s.prime_only_false_alarm_at_flip >= 0.25);
+    }
+
+    #[test]
+    fn genuine_responder_keeps_zero_false_alarm_without_prime() {
+        let s = simulate_prime_sweep(0.30, 0.0, 20, 400, 10, 9);
+        assert_eq!(s.points[0].genuine_false_alarm, 0.0);
+        assert_eq!(s.points.len(), 21);
+    }
+}

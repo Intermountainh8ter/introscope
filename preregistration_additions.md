@@ -761,3 +761,24 @@ Falsifier: a surface-cue correlation drop below 0.70, or an internal-confidence
 responder drop of 0.03 or more.
 
 This is a simulation with no model queried.
+
+## 2026-11-19T03:23:39Z prime-sweep proposal:7345bbbc72dcf43e2516273eb7f7797e358433ac1734463197f66d8009145097
+
+Hypothesis: with seed 7, 400 injected and 400 noise trials per arm, 200
+replicates, a prime grid of 0.00 to 1.00 in steps of 0.05, a genuine-signal
+responder with hit probability 0.30 and false-alarm probability 0.0 at prime 0
+(priming adds to both arms by prime times the remaining probability), and a
+prime-only responder that says yes with probability equal to the prime on both
+arms, the smallest prime at which the prime-only mean hit rate reaches the
+genuine responder's no-prime mean hit rate (priming flip strength) is between
+0.25 and 0.35, and the prime-only responder's false-alarm rate at that prime is
+at least 0.25.
+
+Metric: /priming_flip_strength.
+
+Expected: about 0.30, within 0.25 to 0.35.
+
+Falsifier: a priming flip strength outside 0.25 to 0.35, or a prime-only
+false-alarm rate below 0.25 at the flip strength.
+
+This is a simulation with no model queried.
